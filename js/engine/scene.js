@@ -66,12 +66,12 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
     arcanoid_scene.prototype.init_environment_default = function() {
         //creating skymap
         var urls = [
-            '/resources/textures/nx.jpg',
-            '/resources/textures/px.jpg',
-            '/resources/textures/py.jpg',
-            '/resources/textures/ny.jpg',
-            '/resources/textures/pz.jpg',
-            '/resources/textures/nz.jpg'
+            'resources/textures/nx.jpg',
+            'resources/textures/px.jpg',
+            'resources/textures/py.jpg',
+            'resources/textures/ny.jpg',
+            'resources/textures/pz.jpg',
+            'resources/textures/nz.jpg'
         ];
 
         this.cubemap = THREE.ImageUtils.loadTextureCube(urls); // load textures
@@ -155,8 +155,8 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
             envMap: this.cubemap,
         });
 
-        var circuit_texture = THREE.ImageUtils.loadTexture('/resources/textures/pcb.png');
-        var circuit_gradient_texture = THREE.ImageUtils.loadTexture('/resources/textures/pcb_gradient.jpg');
+        var circuit_texture = THREE.ImageUtils.loadTexture('resources/textures/pcb.png');
+        var circuit_gradient_texture = THREE.ImageUtils.loadTexture('resources/textures/pcb_gradient.jpg');
 
         var vertShader =
             "varying vec2 vUv;\
@@ -265,7 +265,7 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
 
     arcanoid_scene.prototype.load_geometry = function() {
         // TODO: may be unsafe, check what is coming first map or geometry data
-        this.loader.load('/resources/models/block.js', function(geometry) {
+        this.loader.load('resources/models/block.js', function(geometry) {
             // create a new material
             this.block_geometry = geometry;
             var material = new THREE.MeshPhongMaterial({
@@ -289,7 +289,7 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
             }
         }.bind(this));
 
-        this.loader.load('/resources/models/circuit.js', function(geometry) {
+        this.loader.load('resources/models/circuit.js', function(geometry) {
             // create a new material
             this.circuit_geometry = geometry;
 
@@ -367,13 +367,13 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
         };
         this.group = new SPE.Group({
             texture: {
-                value: THREE.ImageUtils.loadTexture('/resources/textures/spark.jpg')
+                value: THREE.ImageUtils.loadTexture('resources/textures/spark.jpg')
             },
             blending: THREE.AdditiveBlending
         });
         this.explosion_group = new SPE.Group( {
             texture: {
-                value: THREE.ImageUtils.loadTexture( '/resources/textures/sprite-explosion2.png' ),
+                value: THREE.ImageUtils.loadTexture( 'resources/textures/sprite-explosion2.png' ),
                 frames: new THREE.Vector2( 5, 5 ),
                 loop: 1
             },
