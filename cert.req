@@ -1,0 +1,61 @@
+Certificate Request:
+    Data:
+        Version: 0 (0x0)
+        Subject: C=JP, ST=Tokyo, O=Internet Widgits Pty Ltd
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus:
+                    00:ab:35:93:5d:c3:5b:b1:37:a3:ba:7e:e5:00:a6:
+                    89:85:89:5e:00:5e:07:73:b4:cd:0b:90:cc:4c:ce:
+                    3b:97:9d:6e:f0:d7:70:e8:88:c8:10:02:ca:5f:d0:
+                    36:d2:35:86:29:fa:2e:77:c9:8a:80:17:e3:10:29:
+                    bb:3d:bb:33:8b:a0:f3:88:78:29:ec:c0:1c:a9:e8:
+                    77:ec:41:48:9f:e6:51:d2:c8:48:43:76:81:a5:c9:
+                    2e:9a:20:ab:7b:6e:8d:19:d7:ee:29:96:ea:9a:d0:
+                    6d:da:8d:cb:3e:b2:11:38:4a:bf:71:25:f7:2f:29:
+                    29:97:28:b0:4c:20:11:cc:49:d2:b8:50:34:aa:e2:
+                    c2:a7:cb:92:f1:38:12:66:92:6a:70:cb:01:04:24:
+                    80:ca:43:f8:1d:1b:fc:57:b7:22:fb:71:41:4b:1d:
+                    51:6c:ed:3b:79:c9:2b:7c:ad:45:5c:cd:96:bf:99:
+                    c9:31:f2:6f:c3:b3:34:2e:e2:fc:22:60:98:a7:44:
+                    2a:5c:ab:14:bc:f7:9e:26:0a:f5:38:40:d6:4a:be:
+                    1f:48:8c:0e:2f:dd:ac:ed:d3:b5:fa:8b:36:1b:31:
+                    6c:30:d5:f9:41:8a:04:9b:1b:f1:13:0b:52:b5:fd:
+                    bb:04:4a:d6:78:fa:19:bd:53:cd:80:b9:17:78:b1:
+                    88:8d
+                Exponent: 65537 (0x10001)
+        Attributes:
+            a0:00
+    Signature Algorithm: sha256WithRSAEncryption
+         79:51:f1:88:8a:fc:45:42:8a:dd:20:0d:de:b7:55:2e:d2:64:
+         2b:6d:05:8e:df:e6:cc:b6:36:f1:53:08:82:22:5b:f2:de:28:
+         02:ef:b7:e2:82:14:cb:27:58:d4:ab:8d:72:28:0d:5c:cc:be:
+         e2:10:d1:7b:5b:a6:64:4a:a1:c3:eb:1f:8e:a1:ef:31:eb:dc:
+         6c:35:c7:0b:8c:d9:71:b2:56:d2:8b:26:2b:6b:29:c5:41:bd:
+         bb:e6:9a:63:29:57:de:69:2c:3c:72:86:92:78:77:fd:79:4a:
+         80:cf:c9:03:27:64:3f:8c:93:1b:1f:85:09:24:e6:1e:88:ed:
+         3a:b0:c4:13:0b:e5:66:1a:d3:21:b5:64:50:03:61:31:cd:0e:
+         ac:d9:71:b6:d5:23:fc:c5:5d:09:53:08:cc:b3:1d:cb:6a:bf:
+         f9:47:f9:23:c2:e0:18:36:ff:f6:38:f1:93:7c:7d:15:aa:65:
+         d9:b9:e3:10:9e:58:8b:8c:b5:06:89:2f:1d:ff:53:40:03:83:
+         4e:19:15:80:2f:76:b3:a7:97:cd:a0:23:a5:fe:50:a9:27:df:
+         b4:83:ee:ca:50:28:c0:c0:73:a1:41:95:17:d9:72:ba:a4:41:
+         9e:aa:29:6d:42:ef:f3:7b:51:ab:9f:9e:f6:d4:da:9e:de:36:
+         c0:e1:5f:cc
+-----BEGIN CERTIFICATE REQUEST-----
+MIIChTCCAW0CAQAwQDELMAkGA1UEBhMCSlAxDjAMBgNVBAgMBVRva3lvMSEwHwYD
+VQQKDBhJbnRlcm5ldCBXaWRnaXRzIFB0eSBMdGQwggEiMA0GCSqGSIb3DQEBAQUA
+A4IBDwAwggEKAoIBAQCrNZNdw1uxN6O6fuUApomFiV4AXgdztM0LkMxMzjuXnW7w
+13DoiMgQAspf0DbSNYYp+i53yYqAF+MQKbs9uzOLoPOIeCnswByp6HfsQUif5lHS
+yEhDdoGlyS6aIKt7bo0Z1+4pluqa0G3ajcs+shE4Sr9xJfcvKSmXKLBMIBHMSdK4
+UDSq4sKny5LxOBJmkmpwywEEJIDKQ/gdG/xXtyL7cUFLHVFs7Tt5ySt8rUVczZa/
+mckx8m/DszQu4vwiYJinRCpcqxS8954mCvU4QNZKvh9IjA4v3azt07X6izYbMWww
+1flBigSbG/ETC1K1/bsEStZ4+hm9U82AuRd4sYiNAgMBAAGgADANBgkqhkiG9w0B
+AQsFAAOCAQEAeVHxiIr8RUKK3SAN3rdVLtJkK20Fjt/mzLY28VMIgiJb8t4oAu+3
+4oIUyydY1KuNcigNXMy+4hDRe1umZEqhw+sfjqHvMevcbDXHC4zZcbJW0osmK2sp
+xUG9u+aaYylX3mksPHKGknh3/XlKgM/JAydkP4yTGx+FCSTmHojtOrDEEwvlZhrT
+IbVkUANhMc0OrNlxttUj/MVdCVMIzLMdy2q/+Uf5I8LgGDb/9jjxk3x9Fapl2bnj
+EJ5Yi4y1BokvHf9TQAODThkVgC92s6eXzaAjpf5QqSfftIPuylAowMBzoUGVF9ly
+uqRBnqopbULv83tRq5+e9tTant42wOFfzA==
+-----END CERTIFICATE REQUEST-----
