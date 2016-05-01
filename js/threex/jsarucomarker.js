@@ -8,7 +8,7 @@ var THREEx = THREEx || {};
 THREEx.JsArucoMarker = function(){
 	var _this = this;
 
-	this.debugEnabled = false;
+	this.debugEnabled = true;
 	this.videoScaleDown = 2;
 	this.modelSize = 1.0; //unit length
 
