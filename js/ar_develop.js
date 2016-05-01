@@ -60,7 +60,7 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'js-aruco/svd', 'js-aruc
 
         //
         f = dict["f"];
-        var fovW = Math.atan2(0.5, f) * 2.0 * 180 / 3.1415;//canvas‰¡‚Ì‹–ìŠp
+        var fovW = Math.atan2(0.5, f) *2 * 180 / 3.1415;//canvas‰¡‚Ì‹–ìŠp
         if (dict["video"] != null) {
             var video = dict["video"];
             var vW = video.videoWidth;
@@ -73,6 +73,7 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'js-aruco/svd', 'js-aruc
             }
         }
         camera.fov = fovW * window.innerHeight / window.innerWidth;
+        camera.updateProjectionMatrix()
         camera.position.x = dict["x"][0];
         camera.position.y = dict["x"][1];
         camera.position.z = dict["x"][2];
@@ -157,6 +158,7 @@ function posest_inner(dict) {
                 f = (n * f + _pos["f_wo"]) / (n + 1);
                 n = n + 1;
             }
+            //f = 1.2;
 
             //dict‚ÉÅVî•ñ‚ğŠi”[
             dict["x"] = _pos["x"];
