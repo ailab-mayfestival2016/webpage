@@ -71,7 +71,7 @@
             var id = mapdata[i].id;
 
             this.pos[id] = mapdata[i].pos;
-            this.mat[id] = mapdata[i].mat;
+            this.mat[id] = numeric.transpose(mapdata[i].mat);//必要なmatは各列が各マーカー座標基底だから
             this.size[id] = mapdata[i].size;
         }
 
@@ -122,7 +122,7 @@
                     //重複して検出しているとき
                     delete_ids.push(id);
                 } else {
-                    result_lst[id] = { "trans": trans, "R": global_R, "pos": _this.pos[id] };
+                    result_lst[id] = { "trans": trans, "R": global_R, "pos": _this.pos[id], "id":id };
                 }
             });
             //重複していたIDを削除
@@ -141,9 +141,13 @@
         this.est_pos = function (domElement, f, runWithout) {
             //観測
             markers = this.observeMarker(domElement);
-            if (markers == null || markers.length < 2) {
+            if (markers == null || markers.length < 1) {
                 console.log("Not Enough Markers");
                 return null;
+            } else if (markers.length < 2 && f != null) {
+                var marker = markers[0];
+                var ans_with_f = this.estimate_with_f(marker["R"], marker["pos"], marker["trans"], 1, f);
+                return { "x": ans_with_f["x"], "R": ans_with_f["R"], "f_wo": null };
             }
             console.log("%d markers detected", markers.length);
 
