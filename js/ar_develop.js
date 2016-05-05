@@ -123,8 +123,7 @@ function posest_inner(dict) {
     for (var i = 0; i < map.length; i++) {
         map[i]["size"] = size;
     }
-    //var imageGrabbing = new THREEx.ImageGrabbing("images/test2.jpg");
-    //var imageGrabbing = new THREEx.VideoGrabbing("videos/sample.3gp");
+
     var imageGrabbing = new THREEx.WebcamGrabbing();
 
     //画像を表示
@@ -137,11 +136,27 @@ function posest_inner(dict) {
     var f = 1.0;
     var n = 0.01;
 
+    var prev = [1.0, 0.0, 0.0];
+
+    var markers = [];
+
+    var counter = 0;
+
     var timerID = setInterval(function () {
-        var _pos = estimater.est_pos(domElement, f, true);
+        //観測したマーカーを逐一ためていく
+        var new_markers = estimater.observeMarker(domElement);
+        if (new_markers != null) {
+            markers = markers.concat(new_markers);
+        }
+        
+        //定期的にたまったマーカーに対し処理
+        var _pos = null;
+        if (counter == 0) {
+            _pos = estimater.est_pos(markers, f, true);
+            markers = [];
+        }
 
         if (_pos != null) {
-
             //表示
             
             console.log("-----CAMERA POSITION-------")
@@ -155,19 +170,24 @@ function posest_inner(dict) {
 
             //更新
             if (_pos["f_wo"] != null) {
-                f = (n * f + _pos["f_wo"]) / (n + 1);
-                n = n + 1;
+                var f_wo = _pos["f_wo"];
+                if (f_wo != null && f_wo > 0.5 && f_wo < 2.0) {
+                    f = (n * f + _pos["f_wo"]) / (n + 1);
+                    n = n + 1;
+                }
             }
-            //f = 1.2;
 
             //dictに最新情報を格納
             dict["x"] = _pos["x"];
             dict["R"] = _pos["R"];
             dict["f"] = f;
             dict["video"] = domElement;
-
-            console.log("W", domElement.videoWidth);
-            console.log("H", domElement.videoHeight);
         }
-    }, 50);
+
+        //
+        counter += 1;
+        if (counter == 3) {
+            counter = 0;
+        }
+    }, 10);
 }

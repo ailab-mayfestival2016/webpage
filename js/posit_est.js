@@ -138,15 +138,14 @@
             return result_array;
         };
 
-        this.est_pos = function (domElement, f, runWithout) {
-            //観測
-            markers = this.observeMarker(domElement);
+        this.est_pos = function (markers, f, runWithout) {
             if (markers == null || markers.length < 1) {
                 console.log("Not Enough Markers");
                 return null;
             } else if (markers.length < 2 && f != null) {
                 var marker = markers[0];
-                var ans_with_f = this.estimate_with_f(marker["R"], marker["pos"], marker["trans"], 1, f);
+                var ans_with_f = this.estimate_with_f(marker["R"], [marker["pos"]], [marker["trans"]], 1, f);
+                console.log("use only one marker");
                 return { "x": ans_with_f["x"], "R": ans_with_f["R"], "f_wo": null };
             }
             console.log("%d markers detected", markers.length);
@@ -193,15 +192,16 @@
 
         this.estimate_with_f = function (R_, marker_vec, cam_vec, n_marker, f) {
             var A = [1.0, 1.0, f];
-
+            //推定位置を、全マーカーの平均として求める
             var possum = [0.0, 0.0, 0.0];
+            var est_pos = [];
             for (var i = 0; i < n_marker; i++) {
                 var pos = numeric.add(marker_vec[i], numeric.dot(R_, numeric.mul(A, cam_vec[i])));
                 possum = numeric.add(possum, pos);
+                est_pos.push(pos);
             }
-
             var pos = numeric.mul(possum, 1.0 / n_marker);
-            return { "x": pos, "R": R_ };
+            return { "x": pos, "R": R_};
         };
 
         this.estimate_without_f = function (R_, marker_vec, cam_vec, counter) {
