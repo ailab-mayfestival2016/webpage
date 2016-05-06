@@ -9,7 +9,7 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
 
     arcanoid_scene.prototype.init = function() {
         this.clock = new THREE.Clock();
-        this.renderer = new THREE.WebGLRenderer();
+        this.renderer = new THREE.WebGLRenderer({ alpha: true });
         this.renderer.setPixelRatio(window.devicePixelRatio ? window.devicePixelRatio : 1);
         console.log(window.devicePixelRatio);
 
@@ -27,6 +27,33 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
         this.camera.position.set(0, 20, 0);
         this.scene.add(this.camera);
 
+    }
+
+    arcanoid_scene.prototype.set_environment = function(type) {
+        if (type == "ar") {
+            this.renderer.setClearColor(0x000000, 0);
+        } else if (type == "projector") {
+            this.renderer.setClearColor(0x000000, 1.0);
+        } else {
+            var shader = THREE.ShaderLib['cube']; // init cube shader from built-in lib
+            shader.uniforms['tCube'].value = this.cubemap; // apply textures to shader
+
+            // create shader material
+            var skyBoxMaterial = new THREE.ShaderMaterial({
+                fragmentShader: shader.fragmentShader,
+                vertexShader: shader.vertexShader,
+                uniforms: shader.uniforms,
+                depthWrite: false,
+                side: THREE.BackSide
+            });
+            this.skybox = new THREE.Mesh(
+                new THREE.CubeGeometry(1000, 1000, 1000),
+                skyBoxMaterial
+            );
+
+            this.scene.add(this.skybox);
+
+        }
     }
 
     arcanoid_scene.prototype.init_controls = function() {
@@ -66,36 +93,19 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
     arcanoid_scene.prototype.init_environment_default = function() {
         //creating skymap
         var urls = [
-            '/resources/textures/nx.jpg',
-            '/resources/textures/px.jpg',
-            '/resources/textures/py.jpg',
-            '/resources/textures/ny.jpg',
-            '/resources/textures/pz.jpg',
-            '/resources/textures/nz.jpg'
+            'resources/textures/nx.jpg',
+            'resources/textures/px.jpg',
+            'resources/textures/py.jpg',
+            'resources/textures/ny.jpg',
+            'resources/textures/pz.jpg',
+            'resources/textures/nz.jpg'
         ];
 
         this.cubemap = THREE.ImageUtils.loadTextureCube(urls); // load textures
         this.cubemap.format = THREE.RGBFormat;
 
-        var shader = THREE.ShaderLib['cube']; // init cube shader from built-in lib
-        shader.uniforms['tCube'].value = this.cubemap; // apply textures to shader
-
-        // create shader material
-        var skyBoxMaterial = new THREE.ShaderMaterial({
-            fragmentShader: shader.fragmentShader,
-            vertexShader: shader.vertexShader,
-            uniforms: shader.uniforms,
-            depthWrite: false,
-            side: THREE.BackSide
-        });
 
         // create skybox mesh
-        this.skybox = new THREE.Mesh(
-            new THREE.CubeGeometry(1000, 1000, 1000),
-            skyBoxMaterial
-        );
-
-        //this.scene.add(this.skybox);
 
         this.light = new THREE.HemisphereLight(0x777777, 0x000000, 0.6);
         this.scene.add(this.light);
@@ -155,8 +165,8 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
             envMap: this.cubemap,
         });
 
-        var circuit_texture = THREE.ImageUtils.loadTexture('/resources/textures/pcb.png');
-        var circuit_gradient_texture = THREE.ImageUtils.loadTexture('/resources/textures/pcb_gradient.jpg');
+        var circuit_texture = THREE.ImageUtils.loadTexture('resources/textures/pcb.png');
+        var circuit_gradient_texture = THREE.ImageUtils.loadTexture('resources/textures/pcb_gradient.png');
 
         var vertShader =
             "varying vec2 vUv;\
@@ -183,7 +193,7 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
         void main()\
         {\
             float t = mod(time, step)/2.0;\
-            float v = texture2D(pcb_gradient, vUv).r;\
+            float v = 1.0 - texture2D(pcb_gradient, vUv).r;\
             const float mi = 30.0, ma = 90.0;\
             float o = (clamp(sin((time+v+shift)*(2.0 + freq))*100.0, mi, ma) - mi)/(ma-mi);/*clamp(-1000.0*(v - t)*(v-t) + 10.0, 0.0, 1.0);*/\
             float p = texture2D(pcb, vUv).r;\
@@ -265,7 +275,7 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
 
     arcanoid_scene.prototype.load_geometry = function() {
         // TODO: may be unsafe, check what is coming first map or geometry data
-        this.loader.load('/resources/models/block.js', function(geometry) {
+        this.loader.load('resources/models/block.js', function(geometry) {
             // create a new material
             this.block_geometry = geometry;
             var material = new THREE.MeshPhongMaterial({
@@ -289,7 +299,7 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
             }
         }.bind(this));
 
-        this.loader.load('/resources/models/circuit.js', function(geometry) {
+        this.loader.load('resources/models/circuit.js', function(geometry) {
             // create a new material
             this.circuit_geometry = geometry;
 
@@ -367,13 +377,13 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
         };
         this.group = new SPE.Group({
             texture: {
-                value: THREE.ImageUtils.loadTexture('/resources/textures/spark.jpg')
+                value: THREE.ImageUtils.loadTexture('resources/textures/spark.jpg')
             },
             blending: THREE.AdditiveBlending
         });
         this.explosion_group = new SPE.Group( {
             texture: {
-                value: THREE.ImageUtils.loadTexture( '/resources/textures/sprite-explosion2.png' ),
+                value: THREE.ImageUtils.loadTexture( 'resources/textures/sprite-explosion2.png' ),
                 frames: new THREE.Vector2( 5, 5 ),
                 loop: 1
             },

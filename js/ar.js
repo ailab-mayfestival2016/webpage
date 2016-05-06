@@ -54,6 +54,7 @@ define(['engine/block', 'engine/scene', 'engine/utils', 'three.js/examples/js/li
     }
     scene.init_controls();
     scene.init_environment_default();
+    scene.set_environment("ar");
     scene.init_blocks(map);
     scene.load_geometry();
     scene.create_particle_system();
