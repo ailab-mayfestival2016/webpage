@@ -156,7 +156,7 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
         });
 
         var circuit_texture = THREE.ImageUtils.loadTexture('resources/textures/pcb.png');
-        var circuit_gradient_texture = THREE.ImageUtils.loadTexture('resources/textures/pcb_gradient.jpg');
+        var circuit_gradient_texture = THREE.ImageUtils.loadTexture('resources/textures/pcb_gradient.png');
 
         var vertShader =
             "varying vec2 vUv;\
@@ -183,7 +183,7 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
         void main()\
         {\
             float t = mod(time, step)/2.0;\
-            float v = texture2D(pcb_gradient, vUv).r;\
+            float v = 1.0 - texture2D(pcb_gradient, vUv).r;\
             const float mi = 30.0, ma = 90.0;\
             float o = (clamp(sin((time+v+shift)*(2.0 + freq))*100.0, mi, ma) - mi)/(ma-mi);/*clamp(-1000.0*(v - t)*(v-t) + 10.0, 0.0, 1.0);*/\
             float p = texture2D(pcb, vUv).r;\
