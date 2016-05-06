@@ -21,7 +21,7 @@ THREEx.JsArucoMarker = function(){
 	debugElement.style.position = 'absolute';
 	debugElement.style.top = '0px';
 	debugElement.style.left = '0px';
-	debugElement.style.opacity = 0.2;
+	debugElement.style.opacity = 0.8;
 	
 	var debugInfoElement	= document.createElement('div');
 	debugElement.appendChild( debugInfoElement );
@@ -116,11 +116,6 @@ THREEx.JsArucoMarker = function(){
 				y : (canvasElement.height / 2) - marker.corners[i].y,
 			})
 		}
-		/*
-		//FOR DEBUG
-		for(var i = 0;i<corners.length;i++){
-			console.log("corner:%d %d",corners[i].x,corners[i].y));
-		}*/
 		// compute the pose from the canvas
 		var posit = new POS.Posit(this.modelSize, canvasElement.width);
 		var pose = posit.pose(corners);

@@ -102,14 +102,16 @@
                     return;
                 }
 
+
                 //console.log("ID %d", id));
 
                 var pos = _this.jsArucoMarker.getMarkerPosition(marker);
                 if (pos == null) {
                     return;
                 }
+
                 var rot = pos.bestRotation;
-                //もともとのカメラ、マーカー座標系が右手系なので修正
+                //
                 rot = [[rot[0][0], rot[0][1], -rot[0][2]],
                         [rot[1][0], rot[1][1], -rot[1][2]],
                         [-rot[2][0], -rot[2][1], rot[2][2]]];
@@ -117,6 +119,23 @@
                 trans = [-trans[0], -trans[1], trans[2]];
                 trans = numeric.mul(trans, _this.size[id]);
                 var global_R = numeric.dot(_this.mat[id], numeric.transpose(rot));
+
+                //FOR DEBUG
+                /*
+                console.log("------- ID:", id);
+                console.log("ROT");
+                for (var i=0; i < 3; i++) {
+                    console.log(numeric.transpose(rot)[i]);
+                }
+                console.log("MAT");
+                for (var i=0; i < 3; i++) {
+                    console.log(_this.mat[id][i]);
+                }
+                console.log("GLOBAL");
+                for (var i=0; i < 3; i++) {
+                    console.log(global_R[i]);
+                }
+                */
 
                 if (id in result_lst) {
                     //重複して検出しているとき

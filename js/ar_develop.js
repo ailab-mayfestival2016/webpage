@@ -32,7 +32,7 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'js-aruco/svd', 'js-aruc
     scene.add(cube);
 
     //
-    var geometry = new THREE.PlaneGeometry(10, 10, 10, 10)
+    var geometry = new THREE.PlaneGeometry(60, 60, 10, 10)
     var material = new THREE.MeshBasicMaterial({
         wireframe: true
     })
@@ -104,7 +104,9 @@ function posest_inner(dict) {
 		{ "id": 40, "pos": [0.0, 15.2, 5.5], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 5.0 },
 		{ "id": 50, "pos": [15.5, 0.0, 5.0], "mat": [[0.0, -1.0, 0.0], [0.0, 0.0, 1.0], [-1.0, 0.0, 0.0]], "size": 5.0 },
 		{ "id": 60, "pos": [0.0, -14.5, 5.0], "mat": [[-1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, 1.0, 0.0]], "size": 5.0 },
-		{ "id": 70, "pos": [-17.5, 0.0, 5.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 5.0 }]*/
+		{ "id": 70, "pos": [-17.5, 0.0, 5.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 5.0 }]
+    */
+    /*
     var onVert = [[0.0, -1.0, 0.0], [0.0, 0.0, 1.0], [-1.0, 0.0, 0.0]];
     var onHori = [[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]];
     var size = 5.0;
@@ -122,7 +124,32 @@ function posest_inner(dict) {
     ]
     for (var i = 0; i < map.length; i++) {
         map[i]["size"] = size;
-    }
+    }*/
+    /*
+    var onHori = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
+    var onVert = [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]];
+    var size = 18.4;
+    var L = 59.5;
+    var map = [
+        { "id": 0, "pos": [-L, -L, 0.0] ,"mat":onHori},
+        { "id": 10, "pos": [-L, 0.0, 0.0], "mat": onHori },
+        { "id": 20, "pos": [-L, L, 0.0], "mat": onHori },
+        { "id": 30, "pos": [0.0, -L, 0.0], "mat": onHori },
+        { "id": 40, "pos": [0.0, 0.0, 0.0], "mat": onHori },
+        { "id": 50, "pos": [0.0, L, 0.0], "mat": onHori },
+        { "id": 60, "pos": [L, -L, 0.0], "mat": onHori },
+        { "id": 70, "pos": [L, 0.0, 0.0], "mat": onHori },
+        { "id": 80, "pos": [L, L, 0.0], "mat": onHori },
+        { "id": 190, "pos": [0.0, L + 100.0, 105.0], "mat": onVert }
+    ]
+    for (var i = 0; i < map.length; i++) {
+        map[i]["size"] = size;
+    }*/
+
+    var map=[
+        { "id": 30, "pos": [-50.0, 0.0, 45.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 75 },
+        { "id": 70, "pos": [0.0, 60.0, 35.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 75 }
+    ]
 
     var imageGrabbing = new THREEx.WebcamGrabbing();
 
@@ -160,10 +187,10 @@ function posest_inner(dict) {
             //•\Ž¦
             
             console.log("-----CAMERA POSITION-------")
-            console.log("position:%5.2f, %5.2f, %5.2f", _pos["x"][0], _pos["x"][1], _pos["x"][2]);
+            console.log("position:", _pos["x"]);
             console.log("rotation");
-            for (var i = 0; i < 3; i++) {
-                console.log("%5.2f, %5.2f, %5.2f", _pos["R"][i][0], _pos["R"][i][1], _pos["R"][i][2]);
+            for (var i=0; i < 3; i++) {
+                console.log(_pos["R"][i])
             }
             console.log("f %.2f", _pos["f_wo"]);
             console.log("ave. f %.2f", f);
