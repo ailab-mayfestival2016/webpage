@@ -11,6 +11,7 @@ define(['engine/block', 'engine/scene', 'engine/utils'], function (block_class, 
     }
     scene.init_controls();
     scene.init_environment_default();
+    scene.set_environment("");
     scene.init_blocks(map);
     scene.load_geometry();
     scene.create_particle_system();

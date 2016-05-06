@@ -9,7 +9,7 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
 
     arcanoid_scene.prototype.init = function() {
         this.clock = new THREE.Clock();
-        this.renderer = new THREE.WebGLRenderer();
+        this.renderer = new THREE.WebGLRenderer({ alpha: true });
         this.renderer.setPixelRatio(window.devicePixelRatio ? window.devicePixelRatio : 1);
         console.log(window.devicePixelRatio);
 
@@ -27,6 +27,33 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
         this.camera.position.set(0, 20, 0);
         this.scene.add(this.camera);
 
+    }
+
+    arcanoid_scene.prototype.set_environment = function(type) {
+        if (type == "ar") {
+            this.renderer.setClearColor(0x000000, 0);
+        } else if (type == "projector") {
+            this.renderer.setClearColor(0x000000, 1.0);
+        } else {
+            var shader = THREE.ShaderLib['cube']; // init cube shader from built-in lib
+            shader.uniforms['tCube'].value = this.cubemap; // apply textures to shader
+
+            // create shader material
+            var skyBoxMaterial = new THREE.ShaderMaterial({
+                fragmentShader: shader.fragmentShader,
+                vertexShader: shader.vertexShader,
+                uniforms: shader.uniforms,
+                depthWrite: false,
+                side: THREE.BackSide
+            });
+            this.skybox = new THREE.Mesh(
+                new THREE.CubeGeometry(1000, 1000, 1000),
+                skyBoxMaterial
+            );
+
+            this.scene.add(this.skybox);
+
+        }
     }
 
     arcanoid_scene.prototype.init_controls = function() {
@@ -77,25 +104,8 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
         this.cubemap = THREE.ImageUtils.loadTextureCube(urls); // load textures
         this.cubemap.format = THREE.RGBFormat;
 
-        var shader = THREE.ShaderLib['cube']; // init cube shader from built-in lib
-        shader.uniforms['tCube'].value = this.cubemap; // apply textures to shader
-
-        // create shader material
-        var skyBoxMaterial = new THREE.ShaderMaterial({
-            fragmentShader: shader.fragmentShader,
-            vertexShader: shader.vertexShader,
-            uniforms: shader.uniforms,
-            depthWrite: false,
-            side: THREE.BackSide
-        });
 
         // create skybox mesh
-        this.skybox = new THREE.Mesh(
-            new THREE.CubeGeometry(1000, 1000, 1000),
-            skyBoxMaterial
-        );
-
-        //this.scene.add(this.skybox);
 
         this.light = new THREE.HemisphereLight(0x777777, 0x000000, 0.6);
         this.scene.add(this.light);
