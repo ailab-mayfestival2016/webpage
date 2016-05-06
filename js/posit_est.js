@@ -77,16 +77,14 @@
 
         this.jsArucoMarker = new THREEx.JsArucoMarker();
 
-        console.log("est_pos defined");
-
-        this.observeMarker = function (domElement) {
+        this.observeMarkers = function (domElement) {
             //マーカーの取得
             var _this = this;
             var markers = this.jsArucoMarker.detectMarkers(domElement);
 
             if (markers.length == 0) {
                 console.log("No Marker Detected");
-                return null;
+                return [];
             }
 
             delete_ids = []
@@ -94,54 +92,31 @@
             //座標と姿勢を取得
             markers.forEach(function (marker) {
                 var id = marker.id;
-
-
                 //想定外のマーカーなら除外
                 if (!(id in _this.mat)) {
                     console.log("Not in map");
                     return;
                 }
-
-
-                //console.log("ID %d", id));
-
+                //マーカーによる位置推定
                 var pos = _this.jsArucoMarker.getMarkerPosition(marker);
                 if (pos == null) {
                     return;
                 }
-
-                var rot = pos.bestRotation;
                 //
-                rot = [[rot[0][0], rot[0][1], -rot[0][2]],
-                        [rot[1][0], rot[1][1], -rot[1][2]],
-                        [-rot[2][0], -rot[2][1], rot[2][2]]];
+                var rot = pos.bestRotation;
+                rot = [[rot[0][0], rot[1][0], -rot[2][0]],
+                        [rot[0][1], rot[1][1], -rot[2][1]],
+                        [-rot[0][2], -rot[1][2], rot[2][2]]];
                 var trans = pos.bestTranslation;
                 trans = [-trans[0], -trans[1], trans[2]];
                 trans = numeric.mul(trans, _this.size[id]);
-                var global_R = numeric.dot(_this.mat[id], numeric.transpose(rot));
-
-                //FOR DEBUG
-                /*
-                console.log("------- ID:", id);
-                console.log("ROT");
-                for (var i=0; i < 3; i++) {
-                    console.log(numeric.transpose(rot)[i]);
-                }
-                console.log("MAT");
-                for (var i=0; i < 3; i++) {
-                    console.log(_this.mat[id][i]);
-                }
-                console.log("GLOBAL");
-                for (var i=0; i < 3; i++) {
-                    console.log(global_R[i]);
-                }
-                */
-
+                var error = pos.bestError;
+                var global_R = numeric.dot(_this.mat[id], rot);
+                //重複していないときのみ追加
                 if (id in result_lst) {
-                    //重複して検出しているとき
                     delete_ids.push(id);
                 } else {
-                    result_lst[id] = { "trans": trans, "R": global_R, "pos": _this.pos[id], "id":id };
+                    result_lst[id] = { "D1": trans, "R1": rot, "GR1":global_R, "E1":error, "Xm": _this.pos[id], "Rm": _this.mat[id], "id": id };
                 }
             });
             //重複していたIDを削除
@@ -150,72 +125,36 @@
                     delete result_lst[id];
                 }
             })
+            //結果を配列に変換
             var result_array = [];
             Object.keys(result_lst).forEach(function (key) {
                 result_array.push(result_lst[key]);
             })
             return result_array;
-        };
+        }
 
-        this.est_pos = function (markers, f, runWithout) {
-            if (markers == null || markers.length < 1) {
-                console.log("Not Enough Markers");
-                return null;
-            } else if (markers.length < 2 && f != null) {
-                var marker = markers[0];
-                var ans_with_f = this.estimate_with_f(marker["R"], [marker["pos"]], [marker["trans"]], 1, f);
-                console.log("use only one marker");
-                return { "x": ans_with_f["x"], "R": ans_with_f["R"], "f_wo": null };
-            }
-            console.log("%d markers detected", markers.length);
-
-            //平均姿勢行列[I,J,K]
+        this.averageRotationMatrix = function (R) {
             var R_ = [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]];
+            var n_marker = 0;
+            R.forEach(function (r) {
+                R_ = numeric.add(R_, r);
 
-            //マーカーのサイズを考慮した、各マーカーからカメラへのベクトル(カメラ座標系)
-            var cam_vec = []
-            //マーカーの位置
-            var marker_vec = []
-
-            var counter = 0;
-            markers.forEach(function (marker) {
-                var global_R = marker["R"];
-                R_ = numeric.add(R_, global_R);
-
-                //マーカー→カメラのベクトル（カメラ座標系）
-                var trans = marker["trans"];
-                cam_vec.push(trans);
-
-                var marker_pos = marker["pos"];
-                marker_vec.push(marker_pos);
-
-                counter = counter + 1;
+                n_marker += 1;
             });
             //平均姿勢行列を求める
-            //reference: http://home.hiroshima-u.ac.jp/tamaki/study/20090924SIS200923.pdf
-            R_ = numeric.mul(R_, 1.0 / counter);
+            R_ = numeric.mul(R_, 1.0 / n_marker);
             var ret = numeric.svd(R_);
             R_ = numeric.dot(ret.U, numeric.transpose(ret.V));
+            return R_;
+        }
 
-            var f_without = null;
-            if (runWithout) {
-                var ans_without_f = this.estimate_without_f(R_, marker_vec, cam_vec, counter);
-                f_without = ans_without_f["f"];
-                if (f == null) {
-                    f = f_without;
-                }
-            }
-            var ans_with_f = this.estimate_with_f(R_, marker_vec, cam_vec, counter, f);
-            return { "x": ans_with_f["x"], "R": ans_with_f["R"], "f_wo": f_without };
-        };
-
-        this.estimate_with_f = function (R_, marker_vec, cam_vec, n_marker, f) {
+        this.estimate_with_f = function (R_, Xm, D, n_marker, f) {
             var A = [1.0, 1.0, f];
             //推定位置を、全マーカーの平均として求める
             var possum = [0.0, 0.0, 0.0];
             var est_pos = [];
             for (var i = 0; i < n_marker; i++) {
-                var pos = numeric.add(marker_vec[i], numeric.dot(R_, numeric.mul(A, cam_vec[i])));
+                var pos = numeric.add(Xm[i], numeric.dot(R_, numeric.mul(A, D[i])));
                 possum = numeric.add(possum, pos);
                 est_pos.push(pos);
             }
@@ -223,15 +162,15 @@
             return { "x": pos, "R": R_};
         };
 
-        this.estimate_without_f = function (R_, marker_vec, cam_vec, counter) {
+        this.estimate_without_f = function (R_, Xm, D, n_marker) {
             //初期値設定
             var f = 1.0;
             var A = [0.0, 0.0, f]
-            var x = numeric.add(marker_vec[0], numeric.dot(R_, numeric.mul(A, cam_vec[0])));
+            var x = numeric.add(Xm[0], numeric.dot(R_, numeric.mul(A, D[0])));
             var prev_x = null;
 
             var n_iter = 0;
-            var max_iter = 1000;
+            var max_iter = 2;//誤差関数が二次関数だから二回で収束する
             var min_err = 1.0;
             while (n_iter < max_iter) {
                 var A = [1.0, 1.0, f];
@@ -239,18 +178,18 @@
                 //ヘッセ行列用バッファ
                 var B = [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]];
                 //勾配用バッファ
-                var D = [0.0, 0.0, 0.0, 0.0];
+                var _D = [0.0, 0.0, 0.0, 0.0];
                 //
-                for (var i = 0; i < counter; i++) {
-                    var m = marker_vec[i];
-                    var d = cam_vec[i];
+                for (var i = 0; i < n_marker; i++) {
+                    var m = Xm[i];
+                    var d = D[i];
                     //
                     var RAfd = numeric.dot(R_, numeric.mul(A, d));
                     var RId = numeric.dot(R_, numeric.mul(I, d));
                     //勾配
                     var dJdx = numeric.sub(x, numeric.add(m, RAfd));
                     var dJdf = -numeric.dot(dJdx, RId);
-                    D[0] += dJdx[0]; D[1] += dJdx[1]; D[2] += dJdx[2]; D[3] += dJdf;
+                    _D[0] += dJdx[0]; _D[1] += dJdx[1]; _D[2] += dJdx[2]; _D[3] += dJdf;
                     //ヘッセ行列
                     B[0][0] += 1.0; B[1][1] += 1.0; B[2][2] += 1.0; //ddJddx
                     var ddJdxdf = numeric.mul(RId, -1.0);
@@ -261,7 +200,7 @@
                 }
                 //
                 var Binv = numeric.inv(B);
-                var delta = numeric.mul(numeric.dot(Binv, D), -1.0); //準ニュートン法
+                var delta = numeric.mul(numeric.dot(Binv, _D), -1.0); //準ニュートン法
 
                 prev_x = numeric.clone(x);
                 x[0] += delta[0]; x[1] += delta[1]; x[2] += delta[2];
