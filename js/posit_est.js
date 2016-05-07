@@ -223,6 +223,8 @@
     }
 
     POSITEST.runPositest = function (map, dict) {
+        var delete_threshold = 100;//この範囲内に収まっていればマーカーの結果は正しいという長さの二乗
+
         //ウェブカメラ起動
         var imageGrabbing = new THREEx.WebcamGrabbing();
 
@@ -252,6 +254,7 @@
             var pos_ = null;
             //定期的にたまったマーカーに対し処理
             if (counter == 0) {
+                console.log("WIDTH", domElement.videoWidth);
                 if (markers.length > 0) {
                     //マーカーの情報をパース
                     var R = []
@@ -289,11 +292,13 @@
                     });
                     var n_delete = Math.floor(markers.length / 2.0);
                     for (var i = 0; i < n_delete; i++) {
-                        var idx = errors[i][0];
-                        console.log("delete",markers[idx]["id"])
-                        R[idx] = null;
-                        Xm[idx] = null;
-                        D[idx] = null;
+                        if (errors[i][1] > delete_threshold) {
+                            var idx = errors[i][0];
+                            console.log("delete", markers[idx]["id"])
+                            R[idx] = null;
+                            Xm[idx] = null;
+                            D[idx] = null;
+                        }
                     }
                     R = R.filter(function (v) {
                         return v != null;
