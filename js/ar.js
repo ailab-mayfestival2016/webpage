@@ -28,7 +28,7 @@ define(['engine/block', 'engine/scene', 'engine/utils', 'three.js/examples/js/li
 		{ "id": 70, "pos": [-175, 0.0, 50], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 50 }]
     var pos = [0.0, 0.0, 5.0];
     var rotation = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
-    var dict = { "x": pos, "R": rotation };
+    var dict = { "x": pos, "R": rotation ,"f":1.0};
 
     //内部でdictを更新し続ける位置推定ルーチンを動かす
     POSITEST.runPositest(_map, dict);
