@@ -9,7 +9,7 @@ THREEx.JsArucoMarker = function(){
 	var _this = this;
 
 	this.debugEnabled = true;
-	this.videoScaleDown = 2;
+	this.videoScaleDown = 3;
 	this.modelSize = 1.0; //unit length
 
 	var canvasElement = document.createElement('canvas');
