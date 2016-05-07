@@ -19,7 +19,7 @@ THREEx.JsArucoMarker = function(){
 	var debugElement	= document.createElement('div');
 	debugElement.appendChild(canvasElement);
 	debugElement.style.position = 'absolute';
-	debugElement.style.top = '0px';
+	debugElement.style.top = '200px';
 	debugElement.style.left = '0px';
 	debugElement.style.opacity = 0.8;
 	
@@ -66,7 +66,7 @@ THREEx.JsArucoMarker = function(){
 		// detect markers
 		var detector = new AR.Detector();
 		var markers = detector.detect(imageData);
-		console.log("%d Markers detected at jsarucomarker",markers.length);
+		//console.log("%d Markers detected at jsarucomarker",markers.length);
 
 		//////////////////////////////////////////////////////////////////////////////////
 		//		update debug

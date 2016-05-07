@@ -21,7 +21,7 @@
         }
 
         if (elem[biggestindex] < 0.0) {
-            console.log("ILLEGAL ARGUMENT");
+            //console.log("ILLEGAL ARGUMENT");
             return null;
         }
 
@@ -83,7 +83,7 @@
             var markers = this.jsArucoMarker.detectMarkers(domElement);
 
             if (markers.length == 0) {
-                console.log("No Marker Detected");
+                //console.log("No Marker Detected");
                 return [];
             }
 
@@ -94,7 +94,7 @@
                 var id = marker.id;
                 //想定外のマーカーなら除外
                 if (!(id in _this.mat)) {
-                    console.log("Not in map");
+                    //console.log("Not in map");
                     return;
                 }
                 //マーカーによる位置推定
@@ -254,7 +254,6 @@
             var pos_ = null;
             //定期的にたまったマーカーに対し処理
             if (counter == 0) {
-                console.log("WIDTH", domElement.videoWidth);
                 if (markers.length > 0) {
                     //マーカーの情報をパース
                     var R = []
@@ -294,7 +293,7 @@
                     for (var i = 0; i < n_delete; i++) {
                         if (errors[i][1] > delete_threshold) {
                             var idx = errors[i][0];
-                            console.log("delete", markers[idx]["id"])
+                            //console.log("delete", markers[idx]["id"])
                             R[idx] = null;
                             Xm[idx] = null;
                             D[idx] = null;
@@ -312,11 +311,9 @@
                     //平均姿勢を求める
                     var R_ = estimater.averageRotationMatrix(R);
                     var n_marker = R.length;
-                    console.log(n_marker);
                     //位置推定
                     if (n_marker > 1) {
                         //マーカーが二個以上あれば焦点距離を更新
-                        console.log("FOGE");
                         var f_wo = estimater.estimate_without_f(R_, Xm, D, n_marker);
                         if (f_wo > 0.5 && f_wo < 2.0) {
                             f = (n * f + _pos["f_wo"]) / (n + 1);
