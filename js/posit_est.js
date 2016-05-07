@@ -202,6 +202,7 @@
                 var Binv = numeric.inv(B);
                 var delta = numeric.mul(numeric.dot(Binv, _D), -1.0); //準ニュートン法
 
+
                 prev_x = numeric.clone(x);
                 x[0] += delta[0]; x[1] += delta[1]; x[2] += delta[2];
                 f += delta[3];
@@ -219,4 +220,119 @@
 
             return { "x": x, "R": R_, "f": f };
         }
+    }
+
+    POSITEST.runPositest = function (map, dict) {
+        //ウェブカメラ起動
+        var imageGrabbing = new THREEx.WebcamGrabbing();
+
+        //画像を表示
+        document.body.appendChild(imageGrabbing.domElement);
+
+        var domElement = imageGrabbing.domElement;
+        dict["video"] = domElement;
+
+        var estimater = new POSITEST.positionEstimater(map);
+
+        //焦点距離の事前情報
+        var f = 1.0;
+        var n = 0.01;
+
+        var prev = [1.0, 0.0, 0.0];
+
+        var markers = [];
+
+        var counter = 0;
+
+        var timerID = setInterval(function () {
+            //観測したマーカーを逐一ためていく
+            var new_markers = estimater.observeMarkers(domElement);
+            markers = markers.concat(new_markers);
+        
+            var pos_ = null;
+            //定期的にたまったマーカーに対し処理
+            if (counter == 0) {
+                if (markers.length > 0) {
+                    //マーカーの情報をパース
+                    var R = []
+                    var Xm = []
+                    var D = []
+                    //平均から離れたデータは外れ値として除いて処理
+                    var A = [1.0, 1.0, f];
+                    var possum = [0.0, 0.0, 0.0];
+                    var est_pos = [];
+                    for (var i = 0; i < markers.length; i++) {
+                        //パース
+                        R.push(markers[i]["GR1"]);
+                        Xm.push(markers[i]["Xm"]);
+                        D.push(markers[i]["D1"]);
+                        //個別の情報で位置推定
+                        var pos = numeric.add(Xm[i], numeric.dot(R[i], numeric.mul(A, D[i])));
+                        possum = numeric.add(possum, pos);
+                        est_pos.push(pos);
+                    }
+                    var avepos = numeric.mul(possum, 1.0 / markers.length);
+                    var errors = []
+                    for (var i = 0; i < markers.length; i++) {
+                        var dist = numeric.sub(est_pos[i], avepos);
+                        dist = numeric.dot(dist, dist);
+                        errors.push([i,dist]);
+                    }
+                    errors.sort(function (a, b) {
+                        if (a[1] < b[1]) {
+                            return 1;
+                        }
+                        if (a[1] > b[1]) {
+                            return -1;
+                        }
+                        return 0;
+                    });
+                    var n_delete = Math.floor(markers.length / 2.0);
+                    for (var i = 0; i < n_delete; i++) {
+                        var idx = errors[i][0];
+                        console.log("delete",markers[idx]["id"])
+                        R[idx] = null;
+                        Xm[idx] = null;
+                        D[idx] = null;
+                    }
+                    R = R.filter(function (v) {
+                        return v != null;
+                    });
+                    Xm = Xm.filter(function (v) {
+                        return v != null;
+                    });
+                    D = D.filter(function (v) {
+                        return v != null;
+                    });
+                    //平均姿勢を求める
+                    var R_ = estimater.averageRotationMatrix(R);
+                    var n_marker = R.length;
+                    console.log(n_marker);
+                    //位置推定
+                    if (n_marker > 1) {
+                        //マーカーが二個以上あれば焦点距離を更新
+                        console.log("FOGE");
+                        var f_wo = estimater.estimate_without_f(R_, Xm, D, n_marker);
+                        if (f_wo > 0.5 && f_wo < 2.0) {
+                            f = (n * f + _pos["f_wo"]) / (n + 1);
+                            n = n + 1;
+                            dict["f"] = f;
+                        }
+                    }
+                    if (n_marker > 0) {
+                        //マーカーがあれば位置推定
+                        var _pos = estimater.estimate_with_f(R_, Xm, D, n_marker, dict["f"]);
+                        dict["x"] = _pos["x"];
+                        dict["R"] = _pos["R"];
+                    }
+                    //array初期化
+                    markers = [];
+                }
+            }
+            //更新処理
+            counter += 1;
+            if (counter == 1) {
+                counter = 0;
+            }
+        }, 10);
     }
