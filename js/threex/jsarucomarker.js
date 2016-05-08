@@ -11,6 +11,7 @@ THREEx.JsArucoMarker = function(){
 	this.debugEnabled = true;
 	this.videoScaleDown = 3;
 	this.modelSize = 1.0; //unit length
+	this.focus = 1.3;
 
 	var canvasElement = document.createElement('canvas');
 	var context = canvasElement.getContext("2d");
@@ -117,53 +118,13 @@ THREEx.JsArucoMarker = function(){
 			})
 		}
 		// compute the pose from the canvas
-		var posit = new POS.Posit(this.modelSize, canvasElement.width);
+		var posit = new POS.Posit(this.modelSize, canvasElement.width*this.focus);
 		var pose = posit.pose(corners);
 		// console.assert(pose !== null)
 		if( pose === null )	return null;
 		
 		return pose;
 	}
-
-	/**
-	 * convert a jsaruco marker to a THREE.Object3D
-	 *
-	 * @param {Object[]} marker   - a found marker
-	 * @param {THREE.Object3D} object3d - the object3d to move
-	 */
-	this.markerToObject3D = function(marker, object3d){
-		// convert corners coordinate - not sure why
-		var corners = []//marker.corners;
-		for (var i = 0; i < marker.corners.length; ++ i){
-			corners.push({
-				x : marker.corners[i].x - (canvasElement.width / 2),
-				y : (canvasElement.height / 2) - marker.corners[i].y,
-			})
-		}
-		// compute the pose from the canvas
-		var posit = new POS.Posit(this.modelSize, canvasElement.width);
-		var pose = posit.pose(corners);
-		// console.assert(pose !== null)
-		if( pose === null )	return;
-
-		//////////////////////////////////////////////////////////////////////////////////
-		//		Translate pose to THREE.Object3D
-		//////////////////////////////////////////////////////////////////////////////////
-		var rotation = pose.bestRotation
-		var translation = pose.bestTranslation
-
-		object3d.scale.x = this.modelSize;
-		object3d.scale.y = this.modelSize;
-		object3d.scale.z = this.modelSize;
-
-		object3d.rotation.x = -Math.asin(-rotation[1][2]);
-		object3d.rotation.y = -Math.atan2(rotation[0][2], rotation[2][2]);
-		object3d.rotation.z =  Math.atan2(rotation[1][0], rotation[1][1]);
-
-		object3d.position.x =  translation[0];
-		object3d.position.y =  translation[1];
-		object3d.position.z = -translation[2];
-	};
 
 	return;
 
@@ -199,6 +160,12 @@ THREEx.JsArucoMarker = function(){
 
 			context.strokeStyle = "green";
 			context.strokeRect(corners[0].x - 2, corners[0].y - 2, 4, 4);
+			context.strokeStyle = "#00ffff";
+			context.strokeRect(corners[1].x - 2, corners[1].y - 2, 4, 4);
+			context.strokeStyle = "#ff00ff";
+			context.strokeRect(corners[2].x - 2, corners[2].y - 2, 4, 4);
+			context.strokeStyle = "#ffff00";
+			context.strokeRect(corners[3].x - 2, corners[3].y - 2, 4, 4);
 			// console.log('marker', marker.id)
 
 			context.fillStyle = "blue";

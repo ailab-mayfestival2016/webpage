@@ -1,4 +1,4 @@
-define(['three', 'three.js/examples/js/libs/stats.min', 'js-aruco/svd', 'js-aruco/posit1-patched', 'js-aruco/cv', 'js-aruco/aruco', 'threex/webcamgrabbing', 'threex/imagegrabbing', 'threex/videograbbing', 'threex/jsarucomarker', 'numeric', 'posit_est'], function (block_class, arcanoid_scene, UTILS) {
+define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js/examples/js/controls/TrackballControls', 'js-aruco/svd', 'js-aruco/posit1-patched', 'js-aruco/cv', 'js-aruco/aruco', 'threex/webcamgrabbing', 'threex/imagegrabbing', 'threex/videograbbing', 'threex/jsarucomarker', 'numeric', 'posit_est'], function (block_class, arcanoid_scene, UTILS) {
     //シーンの作成
     var scene = new THREE.Scene();
     //第一引数のfovは角度？
@@ -23,20 +23,28 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'js-aruco/svd', 'js-aruc
     window.addEventListener("resize", onWindowReSize, false);
 
     //オブジェクトの作成
-    var geometry = new THREE.BoxGeometry(1, 1, 1);
-    var material = new THREE.MeshNormalMaterial();
-    var cube = new THREE.Mesh(geometry, material);
-    cube.position.x = 0;
-    cube.position.y = 0;
-    cube.position.z = 0;
-    scene.add(cube);
+    for (var i = -1; i < 2; i++) {
+        for (var j = -1; j < 2; j++) {
+            var geometry = new THREE.BoxGeometry(50, 50, 50);
+            var material = new THREE.MeshNormalMaterial();
+            var cube = new THREE.Mesh(geometry, material);
+            cube.position.x = i * 100.0;
+            cube.position.y = 300.0 + j * 100.0;
+            cube.position.z = 100.0;
+            scene.add(cube);
+        }
+    }
 
     //
-    var geometry = new THREE.PlaneGeometry(60, 60, 10, 10)
+    var geometry = new THREE.PlaneGeometry(85, 85, 10, 10)
     var material = new THREE.MeshBasicMaterial({
         wireframe: true
     })
     var mesh = new THREE.Mesh(geometry, material);
+    mesh.position.x = -130.0;
+    mesh.position.y = 497.0;
+    mesh.position.z = 155.0;
+    mesh.rotation.x = 3.1415 / 2.0;
     scene.add(mesh);
 
     var mesh = new THREE.AxisHelper
@@ -47,9 +55,30 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'js-aruco/svd', 'js-aruc
     //カメラの座標などを保持しておく場所
     var pos = [0.0, 0.0, 5.0];
     var rotation = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
-    var dict = { "x": pos, "R": rotation,"f":1.0,"video":null };
+    var dict = { "x": pos, "R": rotation, "f": 1.0, "video": null };
+
+    //DEBUG用の文章表示element
+    /*
+    var objBody = document.getElementsByTagName("body").item(0);
+    var debug_element = document.createElement('div'); 
+    debug_element.id = "debug_console";
+    debug_element.style.position = "absolute";
+    debug_element.style.left = "0px";
+    debug_element.style.top = "500px";
+    debug_element.style.background = "#ffffff";
+    objBody.appendChild(debug_element);
+    */
 
     //内部でdictを更新し続ける位置推定ルーチンを動かす
+    var map = [
+        { "id": 10, "pos": [150.0, 455.0, 140.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 },
+        { "id": 100, "pos": [-130.0, 497.0, 155.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 },
+        { "id": 90, "pos": [-192.0, 397.0, 168.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 85.0 },
+        { "id": 150, "pos": [-192.0, 281.0, 205.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 85.0 },
+        { "id": 70, "pos": [-47.0, 505.0, 65.0], "mat": [[0.0, 0.0, -1.0], [1.0, 0.0, 0.0], [0.0, -1.0, 0.0]], "size": 57.0 },
+        { "id": 30, "pos": [26.0, 492.0, 190.0], "mat": [[-1.0, 0.0, 0.0], [0.0, 0.0, -1.0], [0.0, -1.0, 0.0]], "size":57.0 }
+    ]
+    /*
     var map = [{ "id": 0, "pos": [-7.5, 7.5, 0.0], "mat": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], "size": 5.0 },
 		{ "id": 10, "pos": [7.5, 7.5, 0.0], "mat": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], "size": 5.0 },
 		{ "id": 20, "pos": [-7.5, -7.5, 0.0], "mat": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], "size": 5.0 },
@@ -58,7 +87,7 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'js-aruco/svd', 'js-aruc
 		{ "id": 50, "pos": [15.5, 0.0, 5.0], "mat": [[0.0, -1.0, 0.0], [0.0, 0.0, 1.0], [-1.0, 0.0, 0.0]], "size": 5.0 },
 		{ "id": 60, "pos": [0.0, -14.5, 5.0], "mat": [[-1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, 1.0, 0.0]], "size": 5.0 },
 		{ "id": 70, "pos": [-17.5, 0.0, 5.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 5.0 }]
-
+    */
     /*
     var onVert = [[0.0, -1.0, 0.0], [0.0, 0.0, 1.0], [-1.0, 0.0, 0.0]];
     var onHori = [[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]];
@@ -114,6 +143,7 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'js-aruco/svd', 'js-aruc
 
         //
         f = dict["f"];
+        f = 1.3;
         var fovW = Math.atan2(0.5, f) *2 * 180 / 3.1415;//canvas横の視野角
         if (dict["video"] != null) {
             var video = dict["video"];
@@ -137,6 +167,13 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'js-aruco/svd', 'js-aruc
         quaternion.set(q[0],q[1], q[2], q[3]);
         quaternion.normalize();
 
+        /*
+        console.log("--------------")
+        console.log(dict["x"]);
+        for (var i = 0; i < 3; i++) {
+            console.log(dict["R"][i])
+        }
+        */
 
         //描画
         renderer.render(scene, camera);
