@@ -334,7 +334,7 @@ function disposeHierarchy(node, callback) {
                 if (id in result_lst) {
                     delete_ids.push(id);
                 } else {
-                    result_lst[id] = { "D1": trans, "R1": rot, "GR1":global_R, "E1":error, "Xm": _this.pos[id], "Rm": _this.mat[id], "id": id };
+                    result_lst[id] = { "D1": trans, "R1": rot, "GR1":global_R, "E1":error, "Xm": _this.pos[id], "Rm": _this.mat[id], "id": id,"C":pos.corners };
                 }
             });
             //重複していたIDを削除
@@ -514,7 +514,7 @@ function disposeHierarchy(node, callback) {
                     for (var i = 0; i < n_delete; i++) {
                         if (errors[i][1] > delete_threshold) {
                             var idx = errors[i][0];
-                            console.log("delete", markers[idx]["id"],i)
+                            //console.log("delete", markers[idx]["id"],i)
                             R[idx] = null;
                             Xm[idx] = null;
                             D[idx] = null;
@@ -560,4 +560,40 @@ function disposeHierarchy(node, callback) {
                 counter = 0;
             }
         }, 10);
+    }
+
+/**
+画像の座標は、画像の横の長さが1.0で、中央が原点、右、上が順にx,y座標となるようなものと定める
+Ax - 画像中の特徴点の画像上での位置ベクトル(x,y)を行ベクトルとする行列
+AX - 実世界での特徴点の位置ベクトル（ただし全て同一平面上にあるとする）の位置ベクトル(X,Y)を行ベクトルとする行列
+
+https://www.cs.ubc.ca/grads/resources/thesis/May09/Dubrofsky_Elan.pdf
+
+あまりよくは動いていない？
+*/
+    POSITEST.cameraCalibrationHomography = function (Ax, AX) {
+        var A = []
+        for (var i = 0; i < Ax.length; i++) {
+            var x = AX[i][0];
+            var y = AX[i][1];
+            var u = Ax[i][0];
+            var v = Ax[i][1];
+            A.push([-x, -y, -1.0, 0.0, 0.0, 0.0, u * x, u * y, u]);
+            A.push([0.0, 0.0, 0.0, -x, -y, -1.0, v * x, v * y, v]);
+        }
+        A.push([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
+        var Asvd = numeric.svd(A);
+        var h = numeric.transpose(Asvd.V)[8];
+        var H = [[h[0], h[1], h[2]], [h[3], h[4], h[5]], [h[6], h[7], h[8]]];
+        var h12 = [H[0][0] - H[0][1], H[1][0] - H[1][1], H[2][0] - H[2][1]];
+        var f = (h12[0] * h12[0] + h12[1] * h12[1]) / (h12[2] * h12[2]);
+        return f;
+    }
+
+    POSITEST.calibrateFromMarker = function (pose,size) {
+        var Ax = pose.corners;
+        var AX = [[-size / 2.0, -size / 2.0, size / 2.0, size / 2.0], [size / 2.0, -size / 2.0, -size / 2.0, size / 2.0]];
+        AX = numeric.transpose(AX);
+        var f = POSITEST.cameraCalibrationHomography(Ax, AX);
+        return f;
     }

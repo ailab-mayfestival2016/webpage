@@ -121,8 +121,14 @@ THREEx.JsArucoMarker = function(){
 		var posit = new POS.Posit(this.modelSize, canvasElement.width*this.focus);
 		var pose = posit.pose(corners);
 		// console.assert(pose !== null)
-		if( pose === null )	return null;
-		
+		if (pose === null) return null;
+
+		normal_corners = []
+		for (var i = 0; i < marker.corners.length; i++) {
+		    normal_corners.push([corners[i].x / canvasElement.width, corners[i].y / canvasElement.width]);
+		}
+		pose.corners = normal_corners;
+
 		return pose;
 	}
 
