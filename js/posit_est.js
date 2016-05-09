@@ -588,14 +588,18 @@ qはx,y,z,wの順
 
         var estimater = new POSITEST.positionEstimater(map);
 
-        //カルマンフィルタの状態ベクトルは x,i,j,k,fの順
+        //カルマンフィルタの状態ベクトルは x,q,fの順
         //カルマンフィルタ関数群
         //pxとpy(画像中心が原点で横の長さが1.0のやつ)に対する観測行列部分を作成する mは点の座標
-        function createPointH(m, x,i,j,k,f) {
+        function createPointH(m, x,q,f,didq,djdq,dkdq) {
             var Hx = []
             for (var _i = 0; _i < 2; _i++) {
-                Hx.push(new Array(13).fill(0.0));
+                Hx.push(new Array(8).fill(0.0));
             }
+            //
+            var tmpR = POSITEST.fromQuaternionToMatrix(q);
+            var i = tmpR[0], j = tmpR[1], k = tmpR[2];
+
             var m_x = numeric.sub(m, x);
             var m_x_i = numeric.dot(m_x, i);
             var m_x_j = numeric.dot(m_x, j);
@@ -605,18 +609,18 @@ qはx,y,z,wの順
             var dpydx = numeric.mul(- f / (m_x_k * m_x_k), numeric.sub(numeric.mul(m_x_j, k), numeric.mul(m_x_k, j)));
             var dpdij = numeric.mul(- f / m_x_k, m_x);
             var dpxdk = numeric.mul(- f * m_x_i / (m_x_k * m_x_k), m_x);
-            var dpydk = numeric.mul(- f * m_x_j / (m_x_k * m_x_k), m_x);
-            var I = numeric.diag([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
+            var dpydk = numeric.mul(-f * m_x_j / (m_x_k * m_x_k), m_x);
+
+            var dpxdq = numeric.add(numeric.dot(dpdij, didq), numeric.dot(dpxdk, dkdq));
+            var dpydq = numeric.add(numeric.dot(dpdij, djdq), numeric.dot(dpydk, dkdq));
             
             Hx = numeric.setBlock(Hx, [0, 0], [0, 2], [dpxdx]);
             Hx = numeric.setBlock(Hx, [1, 0], [1, 2], [dpydx]);
-            Hx = numeric.setBlock(Hx, [0, 3], [0, 5], [dpdij]);
-            Hx = numeric.setBlock(Hx, [1, 6], [1, 8], [dpdij]);
-            Hx = numeric.setBlock(Hx, [0, 9], [0, 11], [dpxdk]);
-            Hx = numeric.setBlock(Hx, [1, 9], [1, 11], [dpydk]);
+            Hx = numeric.setBlock(Hx, [0, 3], [0, 6], [dpxdq]);
+            Hx = numeric.setBlock(Hx, [1, 3], [1, 6], [dpydq]);
 
-            Hx[0][12] = - m_x_i / m_x_k;
-            Hx[1][12] = - m_x_j / m_x_k;
+            Hx[0][7] = - m_x_i / m_x_k;
+            Hx[1][7] = - m_x_j / m_x_k;
 
             var z_est = [- f * m_x_i / m_x_k, - f * m_x_j / m_x_k];
 
@@ -626,7 +630,22 @@ qはx,y,z,wの順
                 Z: z_est
             }
         }
-        function calcHZ_marker(marker,x,i,j,k,f) {
+        function calcHZ_marker(marker, x, q, f) {
+            var qx = q[0], qy = q[1], qz = q[2], qw = q[3];
+            var didq = [[0, -4 * qy, -4 * qz, 0],
+                [2 * qy, 2 * qx, 2 * qw, 2 * qz],
+                [2 * qz, -2 * qw, 2 * qx, -2 * qy]
+            ];
+            var djdq = [[2 * qy, 2 * qx, -2 * qw, -2 * qz],
+                [-4 * qx, 0, -4 * qz, 0],
+                [2 * qw, 2 * qz, 2 * qy, 2 * qx]
+            ];
+            var dkdq = [
+                [2 * qz, 2 * qw, 2 * qx, 2 * qy],
+                [-2 * qw, 2 * qz, 2 * qy, -2 * qx],
+                [-4 * qx, -4 * qy, 0, 0]
+            ];
+
             var H_marker = []
             var Z_marker = []
             var z_est = []
@@ -636,29 +655,39 @@ qはx,y,z,wの順
             for (var _i = 0; _i < 4; _i++) {
                 var p = numeric.dot(marker["Rm"], vertice[_i]);
                 p = numeric.add(marker["Xm"], p);
-                var Hx = createPointH(p, x, i, j, k, f);
+                var Hx = createPointH(p, x, q, f,didq,djdq,dkdq);
                 //観測行列
-                //H_marker.push(Hx.H[0]);
-                //H_marker.push(Hx.H[1]);
+                H_marker.push(Hx.H[0]);
+                H_marker.push(Hx.H[1]);
                 //実測値
-                //Z_marker.push(marker["C"][_i][0]);
-                //Z_marker.push(marker["C"][_i][1]);
+                Z_marker.push(marker["C"][_i][0]);
+                Z_marker.push(marker["C"][_i][1]);
                 //推定値
-                //z_est.push(Hx.Z[0]);
-                //z_est.push(Hx.Z[1]);
+                z_est.push(Hx.Z[0]);
+                z_est.push(Hx.Z[1]);
             }
-            //直接観測の部分
-            for (var _i = 0; _i < 12; _i++) {
-                var tmp = new Array(13).fill(0.0);
+            //直接観測と推定値の部分
+            //x
+            for (var _i = 0; _i < 3; _i++) {
+                var tmp = new Array(8).fill(0.0);
                 tmp[_i] = 1.0;
                 H_marker.push(tmp);
             }
             var est_x = numeric.add(marker["Xm"], numeric.dot(marker["GR1"], marker["D1"]));
-            
+            //IJK
+            var start_i = H_marker.length;
+            for (var i = 0; i < 9; i++) {
+                var tmp = new Array(8).fill(0.0);
+                H_marker.push(tmp);
+            }
+            H_marker = numeric.setBlock(H_marker, [start_i, 3], [start_i + 2, 6], didq);
+            H_marker = numeric.setBlock(H_marker, [start_i+3, 3], [start_i + 5, 6], djdq);
+            H_marker = numeric.setBlock(H_marker, [start_i+6, 3], [start_i + 8, 6], dkdq);
             var R_T = numeric.transpose(marker["GR1"]);
             Z_marker = Z_marker.concat(est_x, R_T[0], R_T[1], R_T[2]);
 
-            z_est = z_est.concat(x, i, j, k);
+            R_T = POSITEST.fromQuaternionToMatrix(q);//fromQuaternionTOMatrixの戻り値において各行がカメラ座標系の基底
+            z_est = z_est.concat(x, R_T[0], R_T[1], R_T[2]);
             return {
                 H: H_marker,
                 Z: Z_marker,
@@ -668,24 +697,22 @@ qはx,y,z,wの順
         
 
         //初期状態
-        var X = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.4];
+        var X = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.4];
         var s_init_pos = 100000.0;
-        var s_init_angle = 4.0;
+        var s_init_angle = 1.0;
         var s_init_focus = 1.0;
-        var P = numeric.diag([s_init_pos, s_init_pos, s_init_pos, s_init_angle, s_init_angle, s_init_angle, s_init_angle, s_init_angle, s_init_angle,
-        s_init_angle, s_init_angle, s_init_angle, s_init_focus]);
+        var P = numeric.diag([s_init_pos, s_init_pos, s_init_pos, s_init_angle, s_init_angle, s_init_angle, s_init_angle, s_init_focus]);
         var P_dash = null;
 
         //100ミリ秒くらいでの誤差の増分
         var s_dt_pos = 4.0;
         var s_dt_angle = 0.01;
         var s_dt_focus = 0.01;
-        var P_dt = numeric.diag([s_dt_pos, s_dt_pos, s_dt_pos, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_angle,
-        s_dt_angle, s_dt_angle, s_dt_angle, s_dt_focus]);
+        var P_dt = numeric.diag([s_dt_pos, s_dt_pos, s_dt_pos, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_focus]);
         //観測誤差
         var error_pixel = 0.001;
-        var error_pos = 2500.0;
-        var error_angle = 0.25;
+        var error_pos = 10000.0;
+        var error_angle = 0.5;
 
         var last_time = null;
 
@@ -702,16 +729,20 @@ qはx,y,z,wの順
                 } else {
                     var nowtime = Date.now();
                     var dt = (nowtime - last_time) / 100;//100ミリ秒単位で
-                    //状態は変わらない
-                    P_dash = numeric.add(P, numeric.mul(dt * dt, P_dt));
+                    if (dt > 10000) {
+                        //10秒以上たっていた場合は再び初期条件に直す
+                        P = numeric.diag([s_init_pos, s_init_pos, s_init_pos, s_init_angle, s_init_angle, s_init_angle, s_init_angle, s_init_focus]);
+                        P_dash = numeric.clone(P);
+                    } else {
+                        //状態は変わらない
+                        P_dash = numeric.add(P, numeric.mul(dt * dt, P_dt));
+                    }
                     last_time = nowtime;
                 }
 
                 var _x = [X[0],X[1],X[2]];
-                var _i = [X[3],X[4],X[5]];
-                var _j = [X[6],X[7],X[8]];
-                var _k = [X[9],X[10],X[11]];
-                var _f = X[12];
+                var _q = [X[3],X[4],X[5],X[6]];
+                var _f = X[7];
 
                 //カルマンフィルタ更新
                 var H = [];
@@ -720,51 +751,38 @@ qはx,y,z,wの順
                 var R = []
                 
                 for (var i = 0; i < markers.length; i++) {
-                    var ret = calcHZ_marker(markers[i], _x, _i, _j, _k, _f);
+                    var ret = calcHZ_marker(markers[i], _x, _q, _f);
                     H = H.concat(ret.H);
                     Z = Z.concat(ret.Z);
                     ZE = ZE.concat(ret.ZE);
-                    /*R=R.concat([error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pos, error_pos, error_pos,
+                    
+                    R=R.concat([error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pos, error_pos, error_pos,
                         error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle
-                    ]);*/
+                    ]);
+                    /*
                     R = R.concat([error_pos, error_pos, error_pos,
-                        error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle])
+                        error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle])*/
                 }
                 R = numeric.diag(R);
 
                 var E = numeric.sub(Z, ZE);
-                console.log(Z)
-                console.log(ZE)
                 var S = numeric.add(numeric.dot(H, numeric.dot(P_dash, numeric.transpose(H))), R);
                 var K = numeric.dot(P_dash, numeric.dot(numeric.transpose(H), numeric.inv(S)));
                 X = numeric.add(X, numeric.dot(K, E));
-                for (var i = 0; i < K.length; i++) {
-                    console.log(K[i]);
-                }
                 P = numeric.dot(numeric.sub(numeric.diag(new Array(K.length).fill(1.0)), numeric.dot(K, H)), P_dash);
                 
-                var tmpR = [[X[3], X[6], X[9]],
-                    [X[4], X[7], X[10]],
-                    [X[5], X[8], X[11]]
-                ]
-                tmpR = numeric.svd(tmpR);
-                tmpR = numeric.dot(tmpR.U, numeric.transpose(tmpR.V));
-                X[3] = tmpR[0][0];
-                X[4] = tmpR[1][0];
-                X[5] = tmpR[2][0];
-                X[6] = tmpR[0][1];
-                X[7] = tmpR[1][1];
-                X[8] = tmpR[1][2];
-                X[9] = tmpR[2][0];
-                X[10] = tmpR[2][1];
-                X[11] = tmpR[2][2];
+                var tmpq = [X[3],X[4],X[5],X[6]]
+                tmpq = numeric.div(tmpq, numeric.norm2(tmpq));
 
-                console.log("---")
-                console.log(numeric.dot(K, E))
-                console.log(X)
+                X[3] = tmpq[0];
+                X[4] = tmpq[1];
+                X[5] = tmpq[2];
+                X[6] = tmpq[3];
+
+                console.log(X);
 
                 dict["x"] = [X[0], X[1], X[2]]
-                dict["R"] = tmpR;
+                dict["R"] = numeric.transpose(POSITEST.fromQuaternionToMatrix(tmpq));
                 //
                 estimater.updateEstimation(dict);
                 //array初期化
