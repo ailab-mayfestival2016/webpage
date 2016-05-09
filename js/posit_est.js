@@ -308,10 +308,12 @@ qはx,y,z,wの順
         }
 
         this.observeMarkers = function (domElement) {
+            //var start_time = Date.now();
             //マーカーの取得
             var _this = this;
+            //console.log("1", Date.now());
             var markers = this.jsArucoMarker.detectMarkers(domElement);
-
+            //console.log("2", Date.now());
             if (markers.length == 0) {
                 //console.log("No Marker Detected");
                 return [];
@@ -364,6 +366,8 @@ qはx,y,z,wの順
             //DEBUG表示用に保管しておく
             this.last_observation = result_array;
             this.updated_flag = true;
+            //var end_time = Date.now();
+            //console.log("used_time", end_time - start_time);
             return result_array;
         }
 
@@ -575,7 +579,8 @@ qはx,y,z,wの順
     }
 
     POSITEST.runPositestKalman = function (map, dict) {
-        var corner_threshold = 50.0;//位置の分散がこれ以下のときのみコーナーの観測を用いる
+        var corner_threshold = 1000.0;//位置の分散がこれ以下のときのみコーナーの観測を用いる
+        var use_corner = true;
 
         //ウェブカメラ起動
         var imageGrabbing = new THREEx.WebcamGrabbing();
@@ -656,7 +661,7 @@ qはx,y,z,wの順
                 var p = numeric.dot(marker["Rm"], vertice[_i]);
                 p = numeric.add(marker["Xm"], p);
                 var Hx = createPointH(p, x, q, f, didq, djdq, dkdq);
-                if (Math.min(P[0][0], P[1][1], P[2][2]) < corner_threshold) {
+                if (Math.min(P[0][0], P[1][1], P[2][2]) < corner_threshold && use_corner) {
                     //ある程度精度が確保できているときのみコーナーによる推定を行う
                     //観測行列
                     H_marker.push(Hx.H[0]);
@@ -714,7 +719,7 @@ qはx,y,z,wの順
         var P_dt = numeric.diag([s_dt_pos, s_dt_pos, s_dt_pos, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_focus]);
         //観測誤差
         var error_pixel = 0.001;
-        var error_pos = 10000.0;
+        var error_pos = 100000.0;
         var error_angle = 0.2;
 
         var last_time = null;
@@ -724,6 +729,9 @@ qはx,y,z,wの順
 
             var est_pos = []
             if (markers.length > 0) {
+                //var start_time = Date.now()
+                //console.log("1", Date.now());
+
                 //カルマンフィルタ予測
                 if (last_time == null) {
                     //初回は特になにもしない
@@ -743,6 +751,8 @@ qはx,y,z,wの順
                     last_time = nowtime;
                 }
 
+                //console.log("2", Date.now());
+
                 var _x = [X[0],X[1],X[2]];
                 var _q = [X[3],X[4],X[5],X[6]];
                 var _f = X[7];
@@ -759,7 +769,7 @@ qはx,y,z,wの順
                     Z = Z.concat(ret.Z);
                     ZE = ZE.concat(ret.ZE);
                     
-                    if (Math.min(P[0][0], P[1][1], P[2][2]) < corner_threshold) {
+                    if (Math.min(P[0][0], P[1][1], P[2][2]) < corner_threshold && use_corner) {
                         //精度がとれているときだけコーナーを用いる
                         R = R.concat([error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pos, error_pos, error_pos,
                             error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle
@@ -770,6 +780,8 @@ qはx,y,z,wの順
                     }
                 }
                 R = numeric.diag(R);
+                
+                //console.log("3", Date.now());
 
                 var E = numeric.sub(Z, ZE);
                 var S = numeric.add(numeric.dot(H, numeric.dot(P_dash, numeric.transpose(H))), R);
@@ -790,13 +802,14 @@ qはx,y,z,wの順
                 } else if (X[7] > 2.0) {
                     X[7] = 2.0;
                 }
-
+                /*
                 console.log("X");
                 console.log(X);
                 console.log("P");
                 for (var i = 0; i < 8; i++) {
                     console.log(P[i][i]);
                 }
+                */
 
                 dict["x"] = [X[0], X[1], X[2]]
                 dict["R"] = numeric.transpose(POSITEST.fromQuaternionToMatrix(tmpq));
@@ -806,6 +819,10 @@ qはx,y,z,wの順
                 estimater.changeFocus(X[7]);
                 //array初期化
                 markers = [];
+
+                //console.log("4", Date.now());
+                //end_time = Date.now()
+                //console.log("used time", end_time - start_time);
             }
             
         }, 10);
