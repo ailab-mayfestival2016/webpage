@@ -133,7 +133,8 @@ define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js
         { "id": 70, "pos": [0.0, 60.0, 35.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 75 }
     ]
     */
-    POSITEST.runPositest(map, dict);
+
+    POSITEST.runPositestKalman(map, dict);
 
     var rotx = 0.0;
     var roty = 0.0;

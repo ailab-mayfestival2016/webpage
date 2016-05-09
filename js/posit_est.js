@@ -111,6 +111,18 @@ function disposeHierarchy(node, callback) {
         }
         return q;
     }
+/**
+qはx,y,z,wの順
+*/
+    POSITEST.fromQuaternionToMatrix = function(q){
+        var x = q[0];
+        var y = q[1];
+        var z = q[2];
+        var w = q[3]; 
+        return [[1 - 2 * y * y - 2 * z * z, 2 * x * y + 2 * w * z, 2 * x * z - 2 * w * y],
+            [2 * x * y - 2 * w * z, 1 - 2 * x * x - 2 * z * z, 2 * y * z + 2 * w * x],
+            [2 * x * z + 2 * w * y, 2 * y * z - 2 * w * x, 1 - 2 * x * x - 2 * y * y]];
+    }
 
     //mapdataのフォーマット
     //マーカーの配列　各マーカーはidとpos,mat,sizeをキーとして持つ
@@ -334,7 +346,7 @@ function disposeHierarchy(node, callback) {
                 if (id in result_lst) {
                     delete_ids.push(id);
                 } else {
-                    result_lst[id] = { "D1": trans, "R1": rot, "GR1":global_R, "E1":error, "Xm": _this.pos[id], "Rm": _this.mat[id], "id": id,"C":pos.corners };
+                    result_lst[id] = { "D1": trans, "R1": rot, "GR1":global_R, "E1":error, "Xm": _this.pos[id], "Rm": _this.mat[id], "id": id,"C":pos.corners,"size":_this.size[id] };
                 }
             });
             //重複していたIDを削除
@@ -559,6 +571,206 @@ function disposeHierarchy(node, callback) {
             if (counter == 1) {
                 counter = 0;
             }
+        }, 10);
+    }
+
+    POSITEST.runPositestKalman = function (map, dict) {
+        var delete_threshold = 10000;//この範囲内に収まっていればマーカーの結果は正しいという長さの二乗
+
+        //ウェブカメラ起動
+        var imageGrabbing = new THREEx.WebcamGrabbing();
+
+        //画像を表示
+        document.body.appendChild(imageGrabbing.domElement);
+
+        var domElement = imageGrabbing.domElement;
+        dict["video"] = domElement;
+
+        var estimater = new POSITEST.positionEstimater(map);
+
+        //カルマンフィルタの状態ベクトルは x,i,j,k,fの順
+        //カルマンフィルタ関数群
+        //pxとpy(画像中心が原点で横の長さが1.0のやつ)に対する観測行列部分を作成する mは点の座標
+        function createPointH(m, x,i,j,k,f) {
+            var Hx = []
+            for (var _i = 0; _i < 2; _i++) {
+                Hx.push(new Array(13).fill(0.0));
+            }
+            var m_x = numeric.sub(m, x);
+            var m_x_i = numeric.dot(m_x, i);
+            var m_x_j = numeric.dot(m_x, j);
+            var m_x_k = numeric.dot(m_x, k);
+
+            var dpxdx = numeric.mul(- f / (m_x_k * m_x_k), numeric.sub(numeric.mul(m_x_i, k), numeric.mul(m_x_k, i)));
+            var dpydx = numeric.mul(- f / (m_x_k * m_x_k), numeric.sub(numeric.mul(m_x_j, k), numeric.mul(m_x_k, j)));
+            var dpdij = numeric.mul(- f / m_x_k, m_x);
+            var dpxdk = numeric.mul(- f * m_x_i / (m_x_k * m_x_k), m_x);
+            var dpydk = numeric.mul(- f * m_x_j / (m_x_k * m_x_k), m_x);
+            var I = numeric.diag([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
+            
+            Hx = numeric.setBlock(Hx, [0, 0], [0, 2], [dpxdx]);
+            Hx = numeric.setBlock(Hx, [1, 0], [1, 2], [dpydx]);
+            Hx = numeric.setBlock(Hx, [0, 3], [0, 5], [dpdij]);
+            Hx = numeric.setBlock(Hx, [1, 6], [1, 8], [dpdij]);
+            Hx = numeric.setBlock(Hx, [0, 9], [0, 11], [dpxdk]);
+            Hx = numeric.setBlock(Hx, [1, 9], [1, 11], [dpydk]);
+
+            Hx[0][12] = - m_x_i / m_x_k;
+            Hx[1][12] = - m_x_j / m_x_k;
+
+            var z_est = [- f * m_x_i / m_x_k, - f * m_x_j / m_x_k];
+
+            
+            return {
+                H: Hx,
+                Z: z_est
+            }
+        }
+        function calcHZ_marker(marker,x,i,j,k,f) {
+            var H_marker = []
+            var Z_marker = []
+            var z_est = []
+            //各マーカー頂点
+            var L = marker["size"]/2;
+            var vertice = [[-L, L, 0], [L, L, 0], [L, -L, 0], [-L, -L, 0]];
+            for (var _i = 0; _i < 4; _i++) {
+                var p = numeric.dot(marker["Rm"], vertice[_i]);
+                p = numeric.add(marker["Xm"], p);
+                var Hx = createPointH(p, x, i, j, k, f);
+                //観測行列
+                //H_marker.push(Hx.H[0]);
+                //H_marker.push(Hx.H[1]);
+                //実測値
+                //Z_marker.push(marker["C"][_i][0]);
+                //Z_marker.push(marker["C"][_i][1]);
+                //推定値
+                //z_est.push(Hx.Z[0]);
+                //z_est.push(Hx.Z[1]);
+            }
+            //直接観測の部分
+            for (var _i = 0; _i < 12; _i++) {
+                var tmp = new Array(13).fill(0.0);
+                tmp[_i] = 1.0;
+                H_marker.push(tmp);
+            }
+            var est_x = numeric.add(marker["Xm"], numeric.dot(marker["GR1"], marker["D1"]));
+            
+            var R_T = numeric.transpose(marker["GR1"]);
+            Z_marker = Z_marker.concat(est_x, R_T[0], R_T[1], R_T[2]);
+
+            z_est = z_est.concat(x, i, j, k);
+            return {
+                H: H_marker,
+                Z: Z_marker,
+                ZE: z_est
+            }
+        }
+        
+
+        //初期状態
+        var X = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.4];
+        var s_init_pos = 100000.0;
+        var s_init_angle = 4.0;
+        var s_init_focus = 1.0;
+        var P = numeric.diag([s_init_pos, s_init_pos, s_init_pos, s_init_angle, s_init_angle, s_init_angle, s_init_angle, s_init_angle, s_init_angle,
+        s_init_angle, s_init_angle, s_init_angle, s_init_focus]);
+        var P_dash = null;
+
+        //100ミリ秒くらいでの誤差の増分
+        var s_dt_pos = 4.0;
+        var s_dt_angle = 0.01;
+        var s_dt_focus = 0.01;
+        var P_dt = numeric.diag([s_dt_pos, s_dt_pos, s_dt_pos, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_angle,
+        s_dt_angle, s_dt_angle, s_dt_angle, s_dt_focus]);
+        //観測誤差
+        var error_pixel = 0.001;
+        var error_pos = 2500.0;
+        var error_angle = 0.25;
+
+        var last_time = null;
+
+        var timerID = setInterval(function () {
+            var markers = estimater.observeMarkers(domElement);
+
+            var est_pos = []
+            if (markers.length > 0) {
+                //カルマンフィルタ予測
+                if (last_time == null) {
+                    //初回は特になにもしない
+                    last_time = Date.now();
+                    P_dash = numeric.clone(P);
+                } else {
+                    var nowtime = Date.now();
+                    var dt = (nowtime - last_time) / 100;//100ミリ秒単位で
+                    //状態は変わらない
+                    P_dash = numeric.add(P, numeric.mul(dt * dt, P_dt));
+                    last_time = nowtime;
+                }
+
+                var _x = [X[0],X[1],X[2]];
+                var _i = [X[3],X[4],X[5]];
+                var _j = [X[6],X[7],X[8]];
+                var _k = [X[9],X[10],X[11]];
+                var _f = X[12];
+
+                //カルマンフィルタ更新
+                var H = [];
+                var Z = [];
+                var ZE = [];
+                var R = []
+                
+                for (var i = 0; i < markers.length; i++) {
+                    var ret = calcHZ_marker(markers[i], _x, _i, _j, _k, _f);
+                    H = H.concat(ret.H);
+                    Z = Z.concat(ret.Z);
+                    ZE = ZE.concat(ret.ZE);
+                    /*R=R.concat([error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pos, error_pos, error_pos,
+                        error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle
+                    ]);*/
+                    R = R.concat([error_pos, error_pos, error_pos,
+                        error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle])
+                }
+                R = numeric.diag(R);
+
+                var E = numeric.sub(Z, ZE);
+                console.log(Z)
+                console.log(ZE)
+                var S = numeric.add(numeric.dot(H, numeric.dot(P_dash, numeric.transpose(H))), R);
+                var K = numeric.dot(P_dash, numeric.dot(numeric.transpose(H), numeric.inv(S)));
+                X = numeric.add(X, numeric.dot(K, E));
+                for (var i = 0; i < K.length; i++) {
+                    console.log(K[i]);
+                }
+                P = numeric.dot(numeric.sub(numeric.diag(new Array(K.length).fill(1.0)), numeric.dot(K, H)), P_dash);
+                
+                var tmpR = [[X[3], X[6], X[9]],
+                    [X[4], X[7], X[10]],
+                    [X[5], X[8], X[11]]
+                ]
+                tmpR = numeric.svd(tmpR);
+                tmpR = numeric.dot(tmpR.U, numeric.transpose(tmpR.V));
+                X[3] = tmpR[0][0];
+                X[4] = tmpR[1][0];
+                X[5] = tmpR[2][0];
+                X[6] = tmpR[0][1];
+                X[7] = tmpR[1][1];
+                X[8] = tmpR[1][2];
+                X[9] = tmpR[2][0];
+                X[10] = tmpR[2][1];
+                X[11] = tmpR[2][2];
+
+                console.log("---")
+                console.log(numeric.dot(K, E))
+                console.log(X)
+
+                dict["x"] = [X[0], X[1], X[2]]
+                dict["R"] = tmpR;
+                //
+                estimater.updateEstimation(dict);
+                //array初期化
+                markers = [];
+            }
+            
         }, 10);
     }
 
