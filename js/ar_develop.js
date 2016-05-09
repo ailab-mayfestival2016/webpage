@@ -144,7 +144,7 @@ define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js
 
         //
         f = dict["f"];
-        f = 1.3;
+        //f = 1.3;
         var fovW = Math.atan2(0.5, f) *2 * 180 / 3.1415;//canvas‰¡‚ÌŽ‹–ìŠp
         if (dict["video"] != null) {
             var video = dict["video"];

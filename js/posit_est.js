@@ -575,7 +575,7 @@ qはx,y,z,wの順
     }
 
     POSITEST.runPositestKalman = function (map, dict) {
-        var delete_threshold = 10000;//この範囲内に収まっていればマーカーの結果は正しいという長さの二乗
+        var corner_threshold = 50.0;//位置の分散がこれ以下のときのみコーナーの観測を用いる
 
         //ウェブカメラ起動
         var imageGrabbing = new THREEx.WebcamGrabbing();
@@ -655,16 +655,19 @@ qはx,y,z,wの順
             for (var _i = 0; _i < 4; _i++) {
                 var p = numeric.dot(marker["Rm"], vertice[_i]);
                 p = numeric.add(marker["Xm"], p);
-                var Hx = createPointH(p, x, q, f,didq,djdq,dkdq);
-                //観測行列
-                H_marker.push(Hx.H[0]);
-                H_marker.push(Hx.H[1]);
-                //実測値
-                Z_marker.push(marker["C"][_i][0]);
-                Z_marker.push(marker["C"][_i][1]);
-                //推定値
-                z_est.push(Hx.Z[0]);
-                z_est.push(Hx.Z[1]);
+                var Hx = createPointH(p, x, q, f, didq, djdq, dkdq);
+                if (Math.min(P[0][0], P[1][1], P[2][2]) < corner_threshold) {
+                    //ある程度精度が確保できているときのみコーナーによる推定を行う
+                    //観測行列
+                    H_marker.push(Hx.H[0]);
+                    H_marker.push(Hx.H[1]);
+                    //実測値
+                    Z_marker.push(marker["C"][_i][0]);
+                    Z_marker.push(marker["C"][_i][1]);
+                    //推定値
+                    z_est.push(Hx.Z[0]);
+                    z_est.push(Hx.Z[1]);
+                }
             }
             //直接観測と推定値の部分
             //x
@@ -698,21 +701,21 @@ qはx,y,z,wの順
 
         //初期状態
         var X = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.4];
-        var s_init_pos = 100000.0;
-        var s_init_angle = 1.0;
-        var s_init_focus = 1.0;
+        var s_init_pos = 1000000.0;
+        var s_init_angle = 100.0;
+        var s_init_focus = 0.1;
         var P = numeric.diag([s_init_pos, s_init_pos, s_init_pos, s_init_angle, s_init_angle, s_init_angle, s_init_angle, s_init_focus]);
         var P_dash = null;
 
         //100ミリ秒くらいでの誤差の増分
-        var s_dt_pos = 4.0;
-        var s_dt_angle = 0.01;
-        var s_dt_focus = 0.01;
+        var s_dt_pos = 10.0;
+        var s_dt_angle = 0.1;
+        var s_dt_focus = 0.00001;
         var P_dt = numeric.diag([s_dt_pos, s_dt_pos, s_dt_pos, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_focus]);
         //観測誤差
         var error_pixel = 0.001;
         var error_pos = 10000.0;
-        var error_angle = 0.5;
+        var error_angle = 0.2;
 
         var last_time = null;
 
@@ -756,12 +759,15 @@ qはx,y,z,wの順
                     Z = Z.concat(ret.Z);
                     ZE = ZE.concat(ret.ZE);
                     
-                    R=R.concat([error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pos, error_pos, error_pos,
-                        error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle
-                    ]);
-                    /*
-                    R = R.concat([error_pos, error_pos, error_pos,
-                        error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle])*/
+                    if (Math.min(P[0][0], P[1][1], P[2][2]) < corner_threshold) {
+                        //精度がとれているときだけコーナーを用いる
+                        R = R.concat([error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pos, error_pos, error_pos,
+                            error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle
+                        ])
+                    } else {
+                        R = R.concat([error_pos, error_pos, error_pos,
+                            error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle])
+                    }
                 }
                 R = numeric.diag(R);
 
@@ -779,12 +785,25 @@ qはx,y,z,wの順
                 X[5] = tmpq[2];
                 X[6] = tmpq[3];
 
+                if (X[7] < 1.0) {
+                    X[7] = 1.0;
+                } else if (X[7] > 2.0) {
+                    X[7] = 2.0;
+                }
+
+                console.log("X");
                 console.log(X);
+                console.log("P");
+                for (var i = 0; i < 8; i++) {
+                    console.log(P[i][i]);
+                }
 
                 dict["x"] = [X[0], X[1], X[2]]
                 dict["R"] = numeric.transpose(POSITEST.fromQuaternionToMatrix(tmpq));
+                dict["f"] = X[7];
                 //
                 estimater.updateEstimation(dict);
+                estimater.changeFocus(X[7]);
                 //array初期化
                 markers = [];
             }
