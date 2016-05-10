@@ -5,6 +5,8 @@
  * @author Luca Antiga 	/ http://lantiga.github.io
  */
 
+console.log("hoge")
+
 require(["three.js/build/three"], function(){
 
     THREE.TrackballControls = function ( object, domElement ) {

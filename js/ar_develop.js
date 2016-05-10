@@ -57,18 +57,6 @@ define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js
     var rotation = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
     var dict = { "x": pos, "R": rotation, "f": 1.0, "video": null };
 
-    //DEBUG用の文章表示element
-    /*
-    var objBody = document.getElementsByTagName("body").item(0);
-    var debug_element = document.createElement('div'); 
-    debug_element.id = "debug_console";
-    debug_element.style.position = "absolute";
-    debug_element.style.left = "0px";
-    debug_element.style.top = "500px";
-    debug_element.style.background = "#ffffff";
-    objBody.appendChild(debug_element);
-    */
-
     //内部でdictを更新し続ける位置推定ルーチンを動かす
     var map = [
         { "id": 10, "pos": [150.0, 455.0, 140.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 },
