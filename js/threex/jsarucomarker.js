@@ -9,7 +9,7 @@ THREEx.JsArucoMarker = function(){
 	var _this = this;
 
 	this.debugEnabled = true;
-	this.videoScaleDown = 5;
+	this.videoScaleDown = 4;
 	this.modelSize = 1.0; //unit length
 	this.focus = 1.3;
 
@@ -86,7 +86,7 @@ THREEx.JsArucoMarker = function(){
 		}
 
 		// display markers on canvas for debug
-		if( this.debugEnabled === true ){
+		if (this.debugEnabled === true) {
 			debugElement.querySelector('.info .videoScaleDown').innerHTML = this.videoScaleDown
 			if( videoElement.videoWidth !== undefined ){
 				debugElement.querySelector('.info .videoSize').innerHTML = videoElement.videoWidth + 'x' + videoElement.videoHeight

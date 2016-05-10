@@ -1,0 +1,34 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+    <script src="./js/client.js"></script>
+    <meta http-equiv="content-type"
+          content="text/html; charset=UTF-8">
+    <title>sample</title>
+    <style>
+        body {
+            font-size: 12pt;
+            color: #006666;
+        }
+
+        h1 {
+            font-size: 18pt;
+            background-color: #AAFFFF;
+        }
+
+        pre {
+            background-color: #EEEEEE;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1 id="h1">クライアント通信サンプル</h1>
+    </header>
+    <p>接続状態 : <span id="connected">未接続</span></p>
+    <button onclick=javascript:connect()>接続</button>
+    <button id="changeSendButton" onclick=javascript:changeSendFlag()>データ送信On</button>
+    <p>最新の受信データ : <span id="latestData"></span></p>
+</body>
+</html>

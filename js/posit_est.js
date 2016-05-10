@@ -397,7 +397,7 @@ qはx,y,z,wの順
     }
 
     POSITEST.runPositestKalman = function (map, dict) {
-        var corner_threshold = 100000.0;//位置の分散がこれ以下のときのみコーナーの観測を用いる
+        var corner_threshold = 10000.0;//位置の分散がこれ以下のときのみコーナーの観測を用いる
         var use_corner = true;
 
         //ウェブカメラ起動
@@ -603,7 +603,6 @@ qはx,y,z,wの順
                 F_motion = numeric.mul(F_motion, dt / 10);//角速度は1秒ごとの値であるため
                 F_motion[0][0] = F_motion[1][1] = F_motion[2][2] = F_motion[3][3] = 1.0;
                 F = numeric.setBlock(F, [3, 3], [6, 10], F_motion);
-                console.log(X)
                 //X更新
                 var nextq = numeric.dot(F_motion, [X[3], X[4], X[5], X[6], X[7], X[8], X[9], X[10]]);
                 nextq = numeric.mul(1.0 / numeric.norm2(nextq),nextq);

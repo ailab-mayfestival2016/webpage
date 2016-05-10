@@ -7,7 +7,7 @@
 
 console.log("hoge")
 
-require(["three.js/build/three"], function(){
+define(["three.js/build/three"], function(){
 
     THREE.TrackballControls = function ( object, domElement ) {
 

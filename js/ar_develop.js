@@ -1,4 +1,143 @@
-define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js/examples/js/controls/TrackballControls', 'js-aruco/svd', 'js-aruco/posit1-patched', 'js-aruco/cv', 'js-aruco/aruco', 'threex/webcamgrabbing', 'threex/imagegrabbing', 'threex/videograbbing', 'threex/jsarucomarker', 'numeric', 'posit_est'], function (block_class, arcanoid_scene, UTILS) {
+define(['io','three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js/examples/js/controls/TrackballControls', 'js-aruco/svd', 'js-aruco/posit1-patched', 'js-aruco/cv', 'js-aruco/aruco', 'threex/webcamgrabbing', 'threex/imagegrabbing', 'threex/videograbbing', 'threex/jsarucomarker', 'numeric', 'posit_est'], function (io) {
+    //音声
+    window.AudioContext = window.AudioContext || window.webkitAudioContext;
+    var context = new AudioContext();
+
+    // Audio 用の buffer を読み込む
+    var getAudioBuffer = function (url, fn) {
+        var req = new XMLHttpRequest();
+        // array buffer を指定
+        req.responseType = 'arraybuffer';
+
+        req.onreadystatechange = function () {
+            if (req.readyState === 4) {
+                if (req.status === 0 || req.status === 200) {
+                    // array buffer を audio buffer に変換
+                    context.decodeAudioData(req.response, function (buffer) {
+                        // コールバックを実行
+                        fn(buffer);
+                    });
+                }
+            }
+        };
+
+        req.open('GET', url, true);
+        req.send('');
+    };
+
+    // サウンドを再生
+    var playSound = function (buffer) {
+        // source を作成
+        var source = context.createBufferSource();
+        // buffer をセット
+        source.buffer = buffer;
+        // context に connect
+        source.connect(context.destination);
+        // 再生
+        source.start(0);
+    };
+    //音声読み込み
+    var audio_bound = null;
+    getAudioBuffer('/sound/bound.mp3', function (buffer) {
+        // 読み込み完了後にボタンにクリックイベントを登録
+        audio_bound = buffer;
+    });
+    var audio_complete = null;
+    getAudioBuffer('/sound/complete.mp3', function (buffer) {
+        // 読み込み完了後にボタンにクリックイベントを登録
+        audio_complete = buffer;
+    });
+
+
+    //phenox
+    var phenox_pos = [0.0, 0.0, 100.0]
+    //地図
+    var block_map = []
+
+    //通信部分
+    var isConnected = false;
+    var socket = null;
+    //イベントハンドラ
+    function event_px_position(data) {
+        phenox_pos[0] = data[0];
+        phenox_pos[1] = data[1]+200.0;
+    }
+    function event_bar_position(data) {
+
+    }
+    function event_reflect(data) {
+        console.log("reflect")
+        playSound(audio_bound);
+        
+    }
+    function event_hit(data) {
+        deleteBlock(data);
+        console.log("hit")
+    }
+    function event_complete(data) {
+        console.log("complete")
+        playSound(audio_complete);
+    }
+    function event_gameover(data) {
+        console.log("game over")
+    }
+    function event_timeup(data) {
+        console.log("time up")
+    }
+    function event_map(data) {
+        console.log("get map")
+        for (key in block_mesh) {
+            deleteBlock(key);
+        }
+        block_map = []
+        for (key in data) {
+            var block = data[key];
+            var block = {
+                id: key,
+                x: block[0],
+                y: block[1]+200,
+                xL: block[2],
+                yL: block[3]
+            }
+            block_map.push(block);
+            addBlock(block);
+        }
+    }
+    //
+    function connect() {
+        if (socket != null && socket.connected) { return; }
+        var uri = "https://ailab-mayfestival2016-server.herokuapp.com";
+        socket = io.connect(uri, { transports: ['websocket'] });
+        socket.on('connect', function () {
+            socket.on('px_position', event_px_position);
+            socket.on('bar_position', event_bar_position);
+            socket.on('reflect', event_reflect);
+            socket.on('hit', event_hit);
+            socket.on('complete', event_complete);
+            socket.on('gameover', event_gameover);
+            socket.on('timeup', event_timeup);
+            socket.on('map', event_map);
+            socket.on('disconnect', function (data) {
+                isConnected = false;
+            });
+            isConnected = true;
+            console.log("connected");
+            socket.emit("enter_room", { 'room': "Client" });
+        });
+    }
+    function sendData(event, room, data) {
+        if (isConnected) {
+            socket.emit("transfer", {
+                'event': eventName,
+                'room': room,
+                'data': data
+            });
+        }
+    }
+    //接続開始
+    connect()
+
+
     //シーンの作成
     var scene = new THREE.Scene();
     //第一引数のfovは角度？
@@ -22,11 +161,29 @@ define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js
     }
     window.addEventListener("resize", onWindowReSize, false);
 
+    //ふぇのっくす
+    var phenox_mesh = null;
+    (function () {
+        var geometry = new THREE.BoxGeometry(30, 30, 30);
+        var material = new THREE.MeshNormalMaterial();
+        phenox_mesh = new THREE.Mesh(geometry, material);
+        phenox_mesh.position.x = 0.0;
+        phenox_mesh.position.y = 0.0;
+        phenox_mesh.position.z = 0.0;
+        scene.add(phenox_mesh);
+    })();
+
     //オブジェクトの作成
+
+    /*
     for (var i = -1; i < 2; i++) {
         for (var j = -1; j < 2; j++) {
             var geometry = new THREE.BoxGeometry(50, 50, 50);
-            var material = new THREE.MeshNormalMaterial();
+            var material = new THREE.MeshNormalMaterial(
+                {
+                    wireframe: true,
+                    color:'#ffffff'
+                });
             var cube = new THREE.Mesh(geometry, material);
             cube.position.x = i * 100.0;
             cube.position.y = 300.0 + j * 100.0;
@@ -48,7 +205,77 @@ define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js
     scene.add(mesh);
 
     var mesh = new THREE.AxisHelper
+    scene.add(mesh);*/
+    
+    //壁
+    var geometry = new THREE.PlaneGeometry(350, 400, 10, 10)
+    var material = new THREE.MeshBasicMaterial({
+        wireframe: true
+    })
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.position.x = 175;
+    mesh.position.y = 200;
+    mesh.position.z = 0;
+    mesh.rotation.x = 3.1415 / 2.0;
     scene.add(mesh);
+    //
+    var geometry = new THREE.PlaneGeometry(350, 400, 10, 10)
+    var material = new THREE.MeshBasicMaterial({
+        wireframe: true
+    })
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.position.x = 175;
+    mesh.position.y = 450;
+    mesh.position.z = 0;
+    mesh.rotation.x = 3.1415 / 2.0;
+    scene.add(mesh);
+    //
+    var geometry = new THREE.PlaneGeometry(400, 250, 10, 10)
+    var material = new THREE.MeshBasicMaterial({
+        wireframe: true
+    })
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.position.x = 0;
+    mesh.position.y = 325;
+    mesh.position.z = 0;
+    mesh.rotation.y = 3.1415 / 2.0;
+    scene.add(mesh);
+    //
+    var geometry = new THREE.PlaneGeometry(400, 250, 10, 10)
+    var material = new THREE.MeshBasicMaterial({
+        wireframe: true
+    })
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.position.x = 350;
+    mesh.position.y = 325;
+    mesh.position.z = 0;
+    mesh.rotation.y = 3.1415 / 2.0;
+    scene.add(mesh);
+
+    var mesh = new THREE.AxisHelper
+    scene.add(mesh);
+
+    var block_mesh = {};
+    var block_mother = new THREE.Object3D();
+    scene.add(block_mother);
+    function addBlock(block) {
+        var geometry = new THREE.BoxGeometry(block.xL, block.xY,100);
+        var material = new THREE.MeshNormalMaterial();
+        var cube = new THREE.Mesh(geometry, material);
+        cube.position.x = block.x;
+        cube.position.y = block.y;
+        cube.position.z = 100.0;
+        console.log("add",block.id,block.xL,block.yL,block.x,block.y)
+        block_mother.add(cube);
+        block_mesh[block.id] = cube;
+    }
+    function deleteBlock(id) {
+        console.log("delte",id)
+        disposeHierarchy(block_mesh[id], function (child) {
+            child.parent.remove(child);
+        })
+        block_mother.remove(block_mesh[id]);
+    }
 
     camera.position.z = 5;
 
@@ -66,61 +293,6 @@ define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js
         { "id": 70, "pos": [-47.0, 505.0, 65.0], "mat": [[0.0, 0.0, -1.0], [1.0, 0.0, 0.0], [0.0, -1.0, 0.0]], "size": 57.0 },
         { "id": 30, "pos": [26.0, 492.0, 190.0], "mat": [[-1.0, 0.0, 0.0], [0.0, 0.0, -1.0], [0.0, -1.0, 0.0]], "size":57.0 }
     ]
-    /*
-    var map = [{ "id": 0, "pos": [-7.5, 7.5, 0.0], "mat": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], "size": 5.0 },
-		{ "id": 10, "pos": [7.5, 7.5, 0.0], "mat": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], "size": 5.0 },
-		{ "id": 20, "pos": [-7.5, -7.5, 0.0], "mat": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], "size": 5.0 },
-		{ "id": 30, "pos": [7.5, -7.5, 0.0], "mat": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], "size": 5.0 },
-		{ "id": 40, "pos": [0.0, 15.2, 5.5], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 5.0 },
-		{ "id": 50, "pos": [15.5, 0.0, 5.0], "mat": [[0.0, -1.0, 0.0], [0.0, 0.0, 1.0], [-1.0, 0.0, 0.0]], "size": 5.0 },
-		{ "id": 60, "pos": [0.0, -14.5, 5.0], "mat": [[-1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, 1.0, 0.0]], "size": 5.0 },
-		{ "id": 70, "pos": [-17.5, 0.0, 5.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 5.0 }]
-    */
-    /*
-    var onVert = [[0.0, -1.0, 0.0], [0.0, 0.0, 1.0], [-1.0, 0.0, 0.0]];
-    var onHori = [[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]];
-    var size = 5.0;
-    var map = [
-        { "id": 0, "pos": [8.5, 6.5, 9.9], "mat": onVert },
-        { "id": 10, "pos": [8.5, 0.3, 9.9], "mat": onVert },
-        { "id": 20, "pos": [8.5, -5.4, 7.4], "mat": onVert },
-        { "id": 30, "pos": [8.5, 5.7, 3.5], "mat": onVert },
-        { "id": 40, "pos": [8.5, -0.4, 3.5], "mat": onVert },
-        { "id": 50, "pos": [8.5, -6.6, 3.5], "mat": onVert },
-        { "id": 60, "pos": [5.6, 6.4, 0.0], "mat": onHori },
-        { "id": 70, "pos": [5.6, 0.4, 0.0], "mat": onHori },
-        { "id": 80, "pos": [5.6, -5.5, 0.0], "mat": onHori },
-        { "id": 90, "pos": [-0.7, 6.4, 0.0], "mat": onHori }
-    ]
-    for (var i = 0; i < map.length; i++) {
-        map[i]["size"] = size;
-    }*/
-    /*
-    var onHori = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
-    var onVert = [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]];
-    var size = 18.4;
-    var L = 59.5;
-    var map = [
-        { "id": 0, "pos": [-L, -L, 0.0] ,"mat":onHori},
-        { "id": 10, "pos": [-L, 0.0, 0.0], "mat": onHori },
-        { "id": 20, "pos": [-L, L, 0.0], "mat": onHori },
-        { "id": 30, "pos": [0.0, -L, 0.0], "mat": onHori },
-        { "id": 40, "pos": [0.0, 0.0, 0.0], "mat": onHori },
-        { "id": 50, "pos": [0.0, L, 0.0], "mat": onHori },
-        { "id": 60, "pos": [L, -L, 0.0], "mat": onHori },
-        { "id": 70, "pos": [L, 0.0, 0.0], "mat": onHori },
-        { "id": 80, "pos": [L, L, 0.0], "mat": onHori },
-        { "id": 190, "pos": [0.0, L + 100.0, 105.0], "mat": onVert }
-    ]
-    for (var i = 0; i < map.length; i++) {
-        map[i]["size"] = size;
-    }*/
-    /*
-    var map=[
-        { "id": 30, "pos": [-50.0, 0.0, 45.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 75 },
-        { "id": 70, "pos": [0.0, 60.0, 35.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 75 }
-    ]
-    */
 
     POSITEST.runPositestKalman(map, dict);
 
@@ -129,6 +301,11 @@ define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js
     var rotz = 0.0;
     var render = function () {
         requestAnimationFrame(render);
+
+        //phenoxの位置更新
+        phenox_mesh.position.x = phenox_pos[0];
+        phenox_mesh.position.y = phenox_pos[1];
+        phenox_mesh.position.z = phenox_pos[2];
 
         //
         f = dict["f"];
