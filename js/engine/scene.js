@@ -56,6 +56,13 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
         }
     }
 
+    android_scene.prototype.set_render_callback = function(callback) {
+        this.render_callback = callback;
+    }
+    android_scene.prototype.set_update_callback = function(callback) {
+        this.update_callback = callback;
+    }
+
     arcanoid_scene.prototype.init_controls = function() {
         this.controls = new THREE.OrbitControls(this.camera, this.element);
         this.controls.rotateUp(Math.PI / 4);
@@ -437,6 +444,12 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
         this.camera.updateProjectionMatrix();
 
         this.controls.update(dt);
+
+        this.group.tick(dt);
+        this.explosion_group.tick(dt);
+        if (this.update_callback) {
+            this.update_callback(dt);
+        }
         /*if (this.particle_system.isActive) {
             this.particle_system.update(dt);
         }*/
@@ -445,8 +458,9 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
     arcanoid_scene.prototype.render = function(dt) {
         /*effect*/
         this.renderer.render(this.scene, this.camera);
-        this.group.tick(dt);
-        this.explosion_group.tick(dt);
+        if (this.render_callback) {
+            this.render_callback(dt);
+        }
     }
 
     arcanoid_scene.prototype.animate = function(t) {

@@ -108,7 +108,7 @@ function posest_inner(dict) {
     var f = 1.0;
     var n = 1.0;
 
-    var timerID = setInterval(function () {
+    scene.set_update_callback(function (dt) {
         var _pos = estimater.est_pos(domElement, 1.0, true);
 
         if (_pos != null) {
@@ -131,5 +131,5 @@ function posest_inner(dict) {
             dict["x"] = _pos["x"];
             dict["R"] = _pos["R"];
         }
-    }, 50);
+    });
 }
