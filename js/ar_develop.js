@@ -1,4 +1,143 @@
-define(['three', 'three.js/examples/js/libs/stats.min', 'js-aruco/svd', 'js-aruco/posit1-patched', 'js-aruco/cv', 'js-aruco/aruco', 'threex/webcamgrabbing', 'threex/imagegrabbing', 'threex/videograbbing', 'threex/jsarucomarker', 'numeric', 'posit_est'], function (block_class, arcanoid_scene, UTILS) {
+define(['io','three.js/build/three', 'three.js/examples/js/libs/stats.min', 'numeric', 'posit_est'], function (io,a1, a2, a3, POSITEST){
+    //音声
+    window.AudioContext = window.AudioContext || window.webkitAudioContext;
+    var context = new AudioContext();
+
+    // Audio 用の buffer を読み込む
+    var getAudioBuffer = function (url, fn) {
+        var req = new XMLHttpRequest();
+        // array buffer を指定
+        req.responseType = 'arraybuffer';
+
+        req.onreadystatechange = function () {
+            if (req.readyState === 4) {
+                if (req.status === 0 || req.status === 200) {
+                    // array buffer を audio buffer に変換
+                    context.decodeAudioData(req.response, function (buffer) {
+                        // コールバックを実行
+                        fn(buffer);
+                    });
+                }
+            }
+        };
+
+        req.open('GET', url, true);
+        req.send('');
+    };
+
+    // サウンドを再生
+    var playSound = function (buffer) {
+        // source を作成
+        var source = context.createBufferSource();
+        // buffer をセット
+        source.buffer = buffer;
+        // context に connect
+        source.connect(context.destination);
+        // 再生
+        source.start(0);
+    };
+    //音声読み込み
+    var audio_bound = null;
+    getAudioBuffer('/sound/bound.mp3', function (buffer) {
+        // 読み込み完了後にボタンにクリックイベントを登録
+        audio_bound = buffer;
+    });
+    var audio_complete = null;
+    getAudioBuffer('/sound/complete.mp3', function (buffer) {
+        // 読み込み完了後にボタンにクリックイベントを登録
+        audio_complete = buffer;
+    });
+
+
+    //phenox
+    var phenox_pos = [0.0, 0.0, 100.0]
+    //地図
+    var block_map = []
+
+    //通信部分
+    var isConnected = false;
+    var socket = null;
+    //イベントハンドラ
+    function event_px_position(data) {
+        phenox_pos[0] = data[0];
+        phenox_pos[1] = data[1]+200.0;
+    }
+    function event_bar_position(data) {
+
+    }
+    function event_reflect(data) {
+        console.log("reflect")
+        playSound(audio_bound);
+        
+    }
+    function event_hit(data) {
+        deleteBlock(data);
+        console.log("hit")
+    }
+    function event_complete(data) {
+        console.log("complete")
+        playSound(audio_complete);
+    }
+    function event_gameover(data) {
+        console.log("game over")
+    }
+    function event_timeup(data) {
+        console.log("time up")
+    }
+    function event_map(data) {
+        console.log("get map")
+        for (key in block_mesh) {
+            deleteBlock(key);
+        }
+        block_map = []
+        for (key in data) {
+            var block = data[key];
+            var block = {
+                id: key,
+                x: block[0],
+                y: block[1]+200,
+                xL: block[2],
+                yL: block[3]
+            }
+            block_map.push(block);
+            addBlock(block);
+        }
+    }
+    //
+    function connect() {
+        if (socket != null && socket.connected) { return; }
+        var uri = "https://ailab-mayfestival2016-server.herokuapp.com";
+        socket = io.connect(uri, { transports: ['websocket'] });
+        socket.on('connect', function () {
+            socket.on('px_position', event_px_position);
+            socket.on('bar_position', event_bar_position);
+            socket.on('reflect', event_reflect);
+            socket.on('hit', event_hit);
+            socket.on('complete', event_complete);
+            socket.on('gameover', event_gameover);
+            socket.on('timeup', event_timeup);
+            socket.on('map', event_map);
+            socket.on('disconnect', function (data) {
+                isConnected = false;
+            });
+            isConnected = true;
+            console.log("connected");
+            socket.emit("enter_room", { 'room': "Client" });
+        });
+    }
+    function sendData(event, room, data) {
+        if (isConnected) {
+            socket.emit("transfer", {
+                'event': eventName,
+                'room': room,
+                'data': data
+            });
+        }
+    }
+    //接続開始
+    connect()
+
+
     //シーンの作成
     var scene = new THREE.Scene();
     //第一引数のfovは角度？
@@ -22,35 +161,140 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'js-aruco/svd', 'js-aruc
     }
     window.addEventListener("resize", onWindowReSize, false);
 
+    //ふぇのっくす
+    var phenox_mesh = null;
+    (function () {
+        var geometry = new THREE.BoxGeometry(30, 30, 30);
+        var material = new THREE.MeshNormalMaterial();
+        phenox_mesh = new THREE.Mesh(geometry, material);
+        phenox_mesh.position.x = 0.0;
+        phenox_mesh.position.y = 0.0;
+        phenox_mesh.position.z = 0.0;
+        scene.add(phenox_mesh);
+    })();
+
     //オブジェクトの作成
-    var geometry = new THREE.BoxGeometry(1, 1, 1);
-    var material = new THREE.MeshNormalMaterial();
-    var cube = new THREE.Mesh(geometry, material);
-    cube.position.x = 0;
-    cube.position.y = 0;
-    cube.position.z = 0;
-    scene.add(cube);
+
+    /*
+    for (var i = -1; i < 2; i++) {
+        for (var j = -1; j < 2; j++) {
+            var geometry = new THREE.BoxGeometry(50, 50, 50);
+            var material = new THREE.MeshNormalMaterial(
+                {
+                    wireframe: true,
+                    color:'#ffffff'
+                });
+            var cube = new THREE.Mesh(geometry, material);
+            cube.position.x = i * 100.0;
+            cube.position.y = 300.0 + j * 100.0;
+            cube.position.z = 100.0;
+            scene.add(cube);
+        }
+    }
 
     //
-    var geometry = new THREE.PlaneGeometry(10, 10, 10, 10)
+    var geometry = new THREE.PlaneGeometry(85, 85, 10, 10)
     var material = new THREE.MeshBasicMaterial({
         wireframe: true
     })
     var mesh = new THREE.Mesh(geometry, material);
+    mesh.position.x = -130.0;
+    mesh.position.y = 497.0;
+    mesh.position.z = 155.0;
+    mesh.rotation.x = 3.1415 / 2.0;
+    scene.add(mesh);
+
+    var mesh = new THREE.AxisHelper
+    scene.add(mesh);*/
+    
+    //壁
+    var geometry = new THREE.PlaneGeometry(350, 4000, 10, 10)
+    var material = new THREE.MeshBasicMaterial({
+        wireframe: true
+    })
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.position.x = 175;
+    mesh.position.y = 200;
+    mesh.position.z = 0;
+    mesh.rotation.x = 3.1415 / 2.0;
+    scene.add(mesh);
+    //
+    var geometry = new THREE.PlaneGeometry(350, 4000, 10, 10)
+    var material = new THREE.MeshBasicMaterial({
+        wireframe:true
+    })
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.position.x = 175;
+    mesh.position.y = 450;
+    mesh.position.z = 0;
+    mesh.rotation.x = 3.1415 / 2.0;
+    scene.add(mesh);
+    //
+    var geometry = new THREE.PlaneGeometry(4000, 250, 10, 10)
+    var material = new THREE.MeshBasicMaterial({
+        wireframe: true
+    })
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.position.x = 0;
+    mesh.position.y = 325;
+    mesh.position.z = 0;
+    mesh.rotation.y = 3.1415 / 2.0;
+    scene.add(mesh);
+    //
+    var geometry = new THREE.PlaneGeometry(4000, 250, 10, 10)
+    var material = new THREE.MeshBasicMaterial({
+        wireframe: true
+    })
+    var mesh = new THREE.Mesh(geometry, material);
+    mesh.position.x = 350;
+    mesh.position.y = 325;
+    mesh.position.z = 0;
+    mesh.rotation.y = 3.1415 / 2.0;
     scene.add(mesh);
 
     var mesh = new THREE.AxisHelper
     scene.add(mesh);
+
+    var block_mesh = {};
+    var block_mother = new THREE.Object3D();
+    scene.add(block_mother);
+    function addBlock(block) {
+        var geometry = new THREE.BoxGeometry(block.xL, block.xY,100);
+        var material = new THREE.MeshNormalMaterial();
+        var cube = new THREE.Mesh(geometry, material);
+        cube.position.x = block.x;
+        cube.position.y = block.y;
+        cube.position.z = 100.0;
+        console.log("add",block.id,block.xL,block.yL,block.x,block.y)
+        block_mother.add(cube);
+        block_mesh[block.id] = cube;
+    }
+    function deleteBlock(id) {
+        console.log("delte",id)
+        disposeHierarchy(block_mesh[id], function (child) {
+            child.parent.remove(child);
+        })
+        block_mother.remove(block_mesh[id]);
+    }
 
     camera.position.z = 5;
 
     //カメラの座標などを保持しておく場所
     var pos = [0.0, 0.0, 5.0];
     var rotation = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
-    var dict = { "x": pos, "R": rotation,"f":1.0,"video":null };
+    var dict = { "x": pos, "R": rotation, "f": 1.0, "video": null };
 
     //内部でdictを更新し続ける位置推定ルーチンを動かす
-    posest_inner(dict);
+    var map = [
+        { "id": 10, "pos": [150.0, 455.0, 140.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 },
+        { "id": 100, "pos": [-130.0, 497.0, 155.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 },
+        { "id": 90, "pos": [-192.0, 397.0, 168.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 85.0 },
+        { "id": 150, "pos": [-192.0, 281.0, 205.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 85.0 },
+        { "id": 70, "pos": [-47.0, 505.0, 65.0], "mat": [[0.0, 0.0, -1.0], [1.0, 0.0, 0.0], [0.0, -1.0, 0.0]], "size": 57.0 },
+        { "id": 30, "pos": [26.0, 492.0, 190.0], "mat": [[-1.0, 0.0, 0.0], [0.0, 0.0, -1.0], [0.0, -1.0, 0.0]], "size":57.0 }
+    ]
+
+    POSITEST.runPositestKalman(map, dict);
 
     var rotx = 0.0;
     var roty = 0.0;
@@ -58,8 +302,14 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'js-aruco/svd', 'js-aruc
     var render = function () {
         requestAnimationFrame(render);
 
+        //phenoxの位置更新
+        phenox_mesh.position.x = phenox_pos[0];
+        phenox_mesh.position.y = phenox_pos[1];
+        phenox_mesh.position.z = phenox_pos[2];
+
         //
         f = dict["f"];
+        //f = 1.3;
         var fovW = Math.atan2(0.5, f) *2 * 180 / 3.1415;//canvas横の視野角
         if (dict["video"] != null) {
             var video = dict["video"];
@@ -83,6 +333,13 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'js-aruco/svd', 'js-aruc
         quaternion.set(q[0],q[1], q[2], q[3]);
         quaternion.normalize();
 
+        /*
+        console.log("--------------")
+        console.log(dict["x"]);
+        for (var i = 0; i < 3; i++) {
+            console.log(dict["R"][i])
+        }
+        */
 
         //描画
         renderer.render(scene, camera);
@@ -92,82 +349,3 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'js-aruco/svd', 'js-aruc
     console.log("render loop start!!");
     render();
 });
-
-function posest_inner(dict) {
-    //dictのxとRにそれぞれグローバル座標系でのカメラの位置とカメラ座標基底(I右、J上、K手前)が各列の行列を入れる
-    //markerのmatは各「行」が各方向のベクトルになっていることに注意
-    /*
-    var map = [{ "id": 0, "pos": [-7.5, 7.5, 0.0], "mat": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], "size": 5.0 },
-		{ "id": 10, "pos": [7.5, 7.5, 0.0], "mat": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], "size": 5.0 },
-		{ "id": 20, "pos": [-7.5, -7.5, 0.0], "mat": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], "size": 5.0 },
-		{ "id": 30, "pos": [7.5, -7.5, 0.0], "mat": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], "size": 5.0 },
-		{ "id": 40, "pos": [0.0, 15.2, 5.5], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 5.0 },
-		{ "id": 50, "pos": [15.5, 0.0, 5.0], "mat": [[0.0, -1.0, 0.0], [0.0, 0.0, 1.0], [-1.0, 0.0, 0.0]], "size": 5.0 },
-		{ "id": 60, "pos": [0.0, -14.5, 5.0], "mat": [[-1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, 1.0, 0.0]], "size": 5.0 },
-		{ "id": 70, "pos": [-17.5, 0.0, 5.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 5.0 }]*/
-    var onVert = [[0.0, -1.0, 0.0], [0.0, 0.0, 1.0], [-1.0, 0.0, 0.0]];
-    var onHori = [[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]];
-    var size = 5.0;
-    var map = [
-        { "id": 0, "pos": [8.5, 6.5, 9.9], "mat": onVert },
-        { "id": 10, "pos": [8.5, 0.3, 9.9], "mat": onVert },
-        { "id": 20, "pos": [8.5, -5.4, 7.4], "mat": onVert },
-        { "id": 30, "pos": [8.5, 5.7, 3.5], "mat": onVert },
-        { "id": 40, "pos": [8.5, -0.4, 3.5], "mat": onVert },
-        { "id": 50, "pos": [8.5, -6.6, 3.5], "mat": onVert },
-        { "id": 60, "pos": [5.6, 6.4, 0.0], "mat": onHori },
-        { "id": 70, "pos": [5.6, 0.4, 0.0], "mat": onHori },
-        { "id": 80, "pos": [5.6, -5.5, 0.0], "mat": onHori },
-        { "id": 90, "pos": [-0.7, 6.4, 0.0], "mat": onHori }
-    ]
-    for (var i = 0; i < map.length; i++) {
-        map[i]["size"] = size;
-    }
-    //var imageGrabbing = new THREEx.ImageGrabbing("images/test2.jpg");
-    //var imageGrabbing = new THREEx.VideoGrabbing("videos/sample.3gp");
-    var imageGrabbing = new THREEx.WebcamGrabbing();
-
-    //画像を表示
-    document.body.appendChild(imageGrabbing.domElement);
-
-    var domElement = imageGrabbing.domElement;
-
-    var estimater = new POSITEST.positionEstimater(map);
-
-    var f = 1.0;
-    var n = 0.01;
-
-    var timerID = setInterval(function () {
-        var _pos = estimater.est_pos(domElement, f, true);
-
-        if (_pos != null) {
-
-            //表示
-            
-            console.log("-----CAMERA POSITION-------")
-            console.log("position:%5.2f, %5.2f, %5.2f", _pos["x"][0], _pos["x"][1], _pos["x"][2]);
-            console.log("rotation");
-            for (var i = 0; i < 3; i++) {
-                console.log("%5.2f, %5.2f, %5.2f", _pos["R"][i][0], _pos["R"][i][1], _pos["R"][i][2]);
-            }
-            console.log("f %.2f", _pos["f_wo"]);
-            console.log("ave. f %.2f", f);
-
-            //更新
-            if (_pos["f_wo"] != null) {
-                f = (n * f + _pos["f_wo"]) / (n + 1);
-                n = n + 1;
-            }
-            //f = 1.2;
-
-            //dictに最新情報を格納
-            dict["x"] = _pos["x"];
-            dict["R"] = _pos["R"];
-            dict["f"] = f;
-            dict["video"] = domElement;
-
-            console.log("W", domElement.videoWidth);
-            console.log("H", domElement.videoHeight);
-        }
-    }, 50);
-}
