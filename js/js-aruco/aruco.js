@@ -43,13 +43,13 @@ AR.Detector = function(){
   this.candidates = [];
 };
 
-AR.Detector.prototype.detect = function(image){
+AR.Detector.prototype.detect = function (image) {
   CV.grayscale(image, this.grey);
   CV.adaptiveThreshold(this.grey, this.thres, 2, 7);
   
   this.contours = CV.findContours(this.thres, this.binary);
 
-  this.candidates = this.findCandidates(this.contours, image.width * 0.20, 0.05, 10);
+  this.candidates = this.findCandidates(this.contours, image.width * 0.20, 0.05, 5);
   this.candidates = this.clockwiseCorners(this.candidates);
   this.candidates = this.notTooNear(this.candidates, 10);
 

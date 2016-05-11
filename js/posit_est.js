@@ -1,61 +1,65 @@
 
-var POSITEST = POSITEST || {};
 
-function disposeNode(node) {
-    if (node instanceof THREE.Camera) {
-        node = undefined;
-    }
-    else if (node instanceof THREE.Light) {
-        node.dispose();
-        node = undefined;
-    }
-    else if (node instanceof THREE.Mesh) {
-        if (node.geometry) {
-            node.geometry.dispose();
-            node.geometry = undefined;
+
+define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js/examples/js/controls/TrackballControls', 'js-aruco/svd', 'js-aruco/posit1-patched', 'js-aruco/cv', 'js-aruco/aruco', 'threex/webcamgrabbing', 'threex/imagegrabbing', 'threex/videograbbing', 'threex/jsarucomarker', 'numeric'], function (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12) {
+    var POSITEST = {}
+
+
+    function disposeNode(node) {
+        if (node instanceof THREE.Camera) {
+            node = undefined;
         }
-
-        if (node.material) {
-            if (node.material instanceof THREE.MeshFaceMaterial) {
-                $.each(node.material.materials, function (idx, mtrl) {
-                    if (mtrl.map) mtrl.map.dispose();
-                    if (mtrl.lightMap) mtrl.lightMap.dispose();
-                    if (mtrl.bumpMap) mtrl.bumpMap.dispose();
-                    if (mtrl.normalMap) mtrl.normalMap.dispose();
-                    if (mtrl.specularMap) mtrl.specularMap.dispose();
-                    if (mtrl.envMap) mtrl.envMap.dispose();
-
-                    mtrl.dispose();    // disposes any programs associated with the material
-                    mtrl = undefined;
-                });
-            }
-            else {
-                if (node.material.map) node.material.map.dispose();
-                if (node.material.lightMap) node.material.lightMap.dispose();
-                if (node.material.bumpMap) node.material.bumpMap.dispose();
-                if (node.material.normalMap) node.material.normalMap.dispose();
-                if (node.material.specularMap) node.material.specularMap.dispose();
-                if (node.material.envMap) node.material.envMap.dispose();
-
-                node.material.dispose();   // disposes any programs associated with the material
-                node.material = undefined;
-            }
+        else if (node instanceof THREE.Light) {
+            node.dispose();
+            node = undefined;
         }
+        else if (node instanceof THREE.Mesh) {
+            if (node.geometry) {
+                node.geometry.dispose();
+                node.geometry = undefined;
+            }
 
-        node = undefined;
-    }
-    else if (node instanceof THREE.Object3D) {
-        node = undefined;
-    }
-}   // disposeNode
+            if (node.material) {
+                if (node.material instanceof THREE.MeshFaceMaterial) {
+                    $.each(node.material.materials, function (idx, mtrl) {
+                        if (mtrl.map) mtrl.map.dispose();
+                        if (mtrl.lightMap) mtrl.lightMap.dispose();
+                        if (mtrl.bumpMap) mtrl.bumpMap.dispose();
+                        if (mtrl.normalMap) mtrl.normalMap.dispose();
+                        if (mtrl.specularMap) mtrl.specularMap.dispose();
+                        if (mtrl.envMap) mtrl.envMap.dispose();
 
-function disposeHierarchy(node, callback) {
-    for (var i = node.children.length - 1; i >= 0; i--) {
-        var child = node.children[i];
-        disposeHierarchy(child, callback);
-        callback(child);
+                        mtrl.dispose();    // disposes any programs associated with the material
+                        mtrl = undefined;
+                    });
+                }
+                else {
+                    if (node.material.map) node.material.map.dispose();
+                    if (node.material.lightMap) node.material.lightMap.dispose();
+                    if (node.material.bumpMap) node.material.bumpMap.dispose();
+                    if (node.material.normalMap) node.material.normalMap.dispose();
+                    if (node.material.specularMap) node.material.specularMap.dispose();
+                    if (node.material.envMap) node.material.envMap.dispose();
+
+                    node.material.dispose();   // disposes any programs associated with the material
+                    node.material = undefined;
+                }
+            }
+
+            node = undefined;
+        }
+        else if (node instanceof THREE.Object3D) {
+            node = undefined;
+        }
+    }   // disposeNode
+
+    function disposeHierarchy(node, callback) {
+        for (var i = node.children.length - 1; i >= 0; i--) {
+            var child = node.children[i];
+            disposeHierarchy(child, callback);
+            callback(child);
+        }
     }
-}
 
     //require
 
@@ -111,9 +115,9 @@ function disposeHierarchy(node, callback) {
         }
         return q;
     }
-/**
-qはx,y,z,wの順
-*/
+    /**
+    qはx,y,z,wの順
+    */
     POSITEST.fromQuaternionToMatrix = function(q){
         var x = q[0];
         var y = q[1];
@@ -122,6 +126,17 @@ qはx,y,z,wの順
         return [[1 - 2 * y * y - 2 * z * z, 2 * x * y + 2 * w * z, 2 * x * z - 2 * w * y],
             [2 * x * y - 2 * w * z, 1 - 2 * x * x - 2 * z * z, 2 * y * z + 2 * w * x],
             [2 * x * z + 2 * w * y, 2 * y * z - 2 * w * x, 1 - 2 * x * x - 2 * y * y]];
+    }
+
+    POSITEST.createRotationMatrix = function (n, t) {
+        var nx = n[0], ny = n[1], nz = n[2];
+        var c = Math.cos(t), s = Math.sin(t);
+
+        return [
+            [nx * nx * (1 - c) + c, nx * ny * (1 - c) + nz * s, nx * nz * (1 - c) - ny * s],
+            [nx * ny * (1 - c) - nz * s, ny * ny * (1 - c) + c, ny * nz * (1 - c) + nx * s],
+            [nx * nz * (1 - c) + ny * s, ny * nz * (1 - c) - nx * s, nz * nz * (1 - c) + c]
+        ]
     }
 
     //mapdataのフォーマット
@@ -308,10 +323,12 @@ qはx,y,z,wの順
         }
 
         this.observeMarkers = function (domElement) {
+            //var start_time = Date.now();
             //マーカーの取得
             var _this = this;
+            //console.log("1", Date.now());
             var markers = this.jsArucoMarker.detectMarkers(domElement);
-
+            //console.log("2", Date.now());
             if (markers.length == 0) {
                 //console.log("No Marker Detected");
                 return [];
@@ -381,201 +398,11 @@ qはx,y,z,wの順
             R_ = numeric.dot(ret.U, numeric.transpose(ret.V));
             return R_;
         }
-
-        this.estimate_with_f = function (R_, Xm, D, n_marker, f) {
-            var A = [1.0, 1.0, f];
-            //推定位置を、全マーカーの平均として求める
-            var possum = [0.0, 0.0, 0.0];
-            var est_pos = [];
-            for (var i = 0; i < n_marker; i++) {
-                var pos = numeric.add(Xm[i], numeric.dot(R_, numeric.mul(A, D[i])));
-                possum = numeric.add(possum, pos);
-                est_pos.push(pos);
-            }
-            var pos = numeric.mul(possum, 1.0 / n_marker);
-            return { "x": pos, "R": R_};
-        };
-
-        this.estimate_without_f = function (R_, Xm, D, n_marker) {
-            //初期値設定
-            var f = 1.0;
-            var A = [0.0, 0.0, f]
-            var x = numeric.add(Xm[0], numeric.dot(R_, numeric.mul(A, D[0])));
-            var prev_x = null;
-
-            var n_iter = 0;
-            var max_iter = 2;//誤差関数が二次関数だから二回で収束する
-            var min_err = 1.0;
-            while (n_iter < max_iter) {
-                var A = [1.0, 1.0, f];
-                var I = [0.0, 0.0, 1.0];
-                //ヘッセ行列用バッファ
-                var B = [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]];
-                //勾配用バッファ
-                var _D = [0.0, 0.0, 0.0, 0.0];
-                //
-                for (var i = 0; i < n_marker; i++) {
-                    var m = Xm[i];
-                    var d = D[i];
-                    //
-                    var RAfd = numeric.dot(R_, numeric.mul(A, d));
-                    var RId = numeric.dot(R_, numeric.mul(I, d));
-                    //勾配
-                    var dJdx = numeric.sub(x, numeric.add(m, RAfd));
-                    var dJdf = -numeric.dot(dJdx, RId);
-                    _D[0] += dJdx[0]; _D[1] += dJdx[1]; _D[2] += dJdx[2]; _D[3] += dJdf;
-                    //ヘッセ行列
-                    B[0][0] += 1.0; B[1][1] += 1.0; B[2][2] += 1.0; //ddJddx
-                    var ddJdxdf = numeric.mul(RId, -1.0);
-                    B[3][0] += ddJdxdf[0]; B[0][3] += ddJdxdf[0];
-                    B[3][1] += ddJdxdf[1]; B[1][3] += ddJdxdf[1];
-                    B[3][2] += ddJdxdf[2]; B[2][3] += ddJdxdf[2];
-                    B[3][3] += numeric.dot(RId, RId);//ddJddf
-                }
-                //
-                var Binv = numeric.inv(B);
-                var delta = numeric.mul(numeric.dot(Binv, _D), -1.0); //準ニュートン法
-
-                prev_x = numeric.clone(x);
-                x[0] += delta[0]; x[1] += delta[1]; x[2] += delta[2];
-                f += delta[3];
-
-
-                //終了処理
-                if (prev_x == null) {
-
-                } else if (numeric.norm2(numeric.sub(x, prev_x)) < min_err) {
-                    break;
-                }
-                //更新処理
-                n_iter = n_iter + 1;
-            }
-
-            return { "x": x, "R": R_, "f": f };
-        }
-    }
-
-    POSITEST.runPositest = function (map, dict) {
-        var delete_threshold = 10000;//この範囲内に収まっていればマーカーの結果は正しいという長さの二乗
-
-        //ウェブカメラ起動
-        var imageGrabbing = new THREEx.WebcamGrabbing();
-
-        //画像を表示
-        document.body.appendChild(imageGrabbing.domElement);
-
-        var domElement = imageGrabbing.domElement;
-        dict["video"] = domElement;
-
-        var estimater = new POSITEST.positionEstimater(map);
-
-        //焦点距離の事前情報
-        var f = 1.0;
-        var n = 0.01;
-
-        var prev = [1.0, 0.0, 0.0];
-
-        var markers = [];
-
-        var counter = 0;
-
-        var timerID = setInterval(function () {
-            //観測したマーカーを逐一ためていく
-            var new_markers = estimater.observeMarkers(domElement);
-            markers = markers.concat(new_markers);
-        
-            var pos_ = null;
-            //定期的にたまったマーカーに対し処理
-            if (counter == 0) {
-                if (markers.length > 0) {
-                    //マーカーの情報をパース
-                    var R = []
-                    var Xm = []
-                    var D = []
-                    //平均から離れたデータは外れ値として除いて処理
-                    var A = [1.0, 1.0, f];
-                    var possum = [0.0, 0.0, 0.0];
-                    var est_pos = [];
-                    for (var i = 0; i < markers.length; i++) {
-                        //パース
-                        R.push(markers[i]["GR1"]);
-                        Xm.push(markers[i]["Xm"]);
-                        D.push(markers[i]["D1"]);
-                        //個別の情報で位置推定
-                        var pos = numeric.add(Xm[i], numeric.dot(R[i], numeric.mul(A, D[i])));
-                        possum = numeric.add(possum, pos);
-                        est_pos.push(pos);
-                    }
-                    var avepos = numeric.mul(possum, 1.0 / markers.length);
-                    var errors = []
-                    for (var i = 0; i < markers.length; i++) {
-                        var dist = numeric.sub(est_pos[i], avepos);
-                        dist = numeric.dot(dist, dist);
-                        errors.push([i,dist]);
-                    }
-                    errors.sort(function (a, b) {
-                        if (a[1] < b[1]) {
-                            return 1;
-                        }
-                        if (a[1] > b[1]) {
-                            return -1;
-                        }
-                        return 0;
-                    });
-                    var n_delete = Math.floor(markers.length *0.4 - 0.1);
-                    for (var i = 0; i < n_delete; i++) {
-                        if (errors[i][1] > delete_threshold) {
-                            var idx = errors[i][0];
-                            //console.log("delete", markers[idx]["id"],i)
-                            R[idx] = null;
-                            Xm[idx] = null;
-                            D[idx] = null;
-                        }
-                    }
-                    R = R.filter(function (v) {
-                        return v != null;
-                    });
-                    Xm = Xm.filter(function (v) {
-                        return v != null;
-                    });
-                    D = D.filter(function (v) {
-                        return v != null;
-                    });
-                    //平均姿勢を求める
-                    var R_ = estimater.averageRotationMatrix(R);
-                    var n_marker = R.length;
-                    //位置推定
-                    if (n_marker > 1) {
-                        //マーカーが二個以上あれば焦点距離を更新
-                        var f_wo = estimater.estimate_without_f(R_, Xm, D, n_marker);
-                        if (f_wo["f"] > 0.5 && f_wo["f"] < 2.0) {
-                            f = (n * f + f_wo["f"]) / (n + 1);
-                            n = n + 1;
-                            dict["f"] = f;
-                        }
-                    }
-                    if (n_marker > 0) {
-                        //マーカーがあれば位置推定
-                        var _pos = estimater.estimate_with_f(R_, Xm, D, n_marker, 1.0);//dict["f"]);
-                        dict["x"] = _pos["x"];
-                        dict["R"] = _pos["R"];
-                    }
-                    //
-                    estimater.updateEstimation(dict);
-                    //array初期化
-                    markers = [];
-                }
-            }
-            //更新処理
-            counter += 1;
-            if (counter == 1) {
-                counter = 0;
-            }
-        }, 10);
     }
 
     POSITEST.runPositestKalman = function (map, dict) {
-        var corner_threshold = 50.0;//位置の分散がこれ以下のときのみコーナーの観測を用いる
+        var corner_threshold = 10000.0;//位置の分散がこれ以下のときのみコーナーの観測を用いる
+        var use_corner = true;
 
         //ウェブカメラ起動
         var imageGrabbing = new THREEx.WebcamGrabbing();
@@ -588,13 +415,13 @@ qはx,y,z,wの順
 
         var estimater = new POSITEST.positionEstimater(map);
 
-        //カルマンフィルタの状態ベクトルは x,q,fの順
+        //カルマンフィルタの状態ベクトルは x,q,f,omegaの順
         //カルマンフィルタ関数群
         //pxとpy(画像中心が原点で横の長さが1.0のやつ)に対する観測行列部分を作成する mは点の座標
         function createPointH(m, x,q,f,didq,djdq,dkdq) {
             var Hx = []
             for (var _i = 0; _i < 2; _i++) {
-                Hx.push(new Array(8).fill(0.0));
+                Hx.push(new Array(11).fill(0.0));
             }
             //
             var tmpR = POSITEST.fromQuaternionToMatrix(q);
@@ -656,7 +483,7 @@ qはx,y,z,wの順
                 var p = numeric.dot(marker["Rm"], vertice[_i]);
                 p = numeric.add(marker["Xm"], p);
                 var Hx = createPointH(p, x, q, f, didq, djdq, dkdq);
-                if (Math.min(P[0][0], P[1][1], P[2][2]) < corner_threshold) {
+                if (Math.min(P[0][0], P[1][1], P[2][2]) < corner_threshold && use_corner) {
                     //ある程度精度が確保できているときのみコーナーによる推定を行う
                     //観測行列
                     H_marker.push(Hx.H[0]);
@@ -672,7 +499,7 @@ qはx,y,z,wの順
             //直接観測と推定値の部分
             //x
             for (var _i = 0; _i < 3; _i++) {
-                var tmp = new Array(8).fill(0.0);
+                var tmp = new Array(11).fill(0.0);
                 tmp[_i] = 1.0;
                 H_marker.push(tmp);
             }
@@ -680,7 +507,7 @@ qはx,y,z,wの順
             //IJK
             var start_i = H_marker.length;
             for (var i = 0; i < 9; i++) {
-                var tmp = new Array(8).fill(0.0);
+                var tmp = new Array(11).fill(0.0);
                 H_marker.push(tmp);
             }
             H_marker = numeric.setBlock(H_marker, [start_i, 3], [start_i + 2, 6], didq);
@@ -700,66 +527,122 @@ qはx,y,z,wの順
         
 
         //初期状態
-        var X = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.4];
+        var X = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.4,0.0,0.0,0.0];
         var s_init_pos = 1000000.0;
         var s_init_angle = 100.0;
         var s_init_focus = 0.1;
-        var P = numeric.diag([s_init_pos, s_init_pos, s_init_pos, s_init_angle, s_init_angle, s_init_angle, s_init_angle, s_init_focus]);
+        var s_init_rot = 0.1;
+        var P = numeric.diag([s_init_pos, s_init_pos, s_init_pos, s_init_angle, s_init_angle, s_init_angle, s_init_angle, s_init_focus,
+        s_init_rot,s_init_rot,s_init_rot]);
         var P_dash = null;
+        
+        //状態遷移行列
+        F = []
+        for (var i = 0; i < 11; i++) {
+            F.push(new Array(11).fill(0.0));
+            if (i < 8) {
+                F[i][i] = 1.0;
+            }
+        }
 
         //100ミリ秒くらいでの誤差の増分
         var s_dt_pos = 10.0;
-        var s_dt_angle = 0.1;
+        var s_dt_angle = 0.0;
         var s_dt_focus = 0.00001;
-        var P_dt = numeric.diag([s_dt_pos, s_dt_pos, s_dt_pos, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_focus]);
+        var s_dt_rot = 0.01;
+        var P_dt = numeric.diag([s_dt_pos, s_dt_pos, s_dt_pos, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_focus,
+        s_dt_rot,s_dt_rot,s_dt_rot]);
         //観測誤差
         var error_pixel = 0.001;
-        var error_pos = 10000.0;
+        var error_pos = 100000.0;
         var error_angle = 0.2;
+        var error_rot = 0.001;
 
         var last_time = null;
+
+
+        //モーションの変化を受信して画面の方向を計算するイベントハンドラ
+        var latest_motion = [0.0, 0.0, 0.0];//最後に確認してからの足し合わせ
+        var n_motion = 0;//足し合わせてあった数
+        function motionEventHandler(event) {
+            var motion = [event.rotationRate.alpha, event.rotationRate.beta, event.rotationRate.gamma];
+            latest_motion = numeric.add(latest_motion, motion);
+            n_motion += 1;
+        }
+        window.addEventListener('devicemotion', motionEventHandler);
 
         var timerID = setInterval(function () {
             var markers = estimater.observeMarkers(domElement);
 
-            var est_pos = []
-            if (markers.length > 0) {
-                //カルマンフィルタ予測
-                if (last_time == null) {
-                    //初回は特になにもしない
-                    last_time = Date.now();
-                    P_dash = numeric.clone(P);
-                } else {
-                    var nowtime = Date.now();
-                    var dt = (nowtime - last_time) / 100;//100ミリ秒単位で
-                    if (dt > 10000) {
-                        //10秒以上たっていた場合は再び初期条件に直す
-                        P = numeric.diag([s_init_pos, s_init_pos, s_init_pos, s_init_angle, s_init_angle, s_init_angle, s_init_angle, s_init_focus]);
-                        P_dash = numeric.clone(P);
-                    } else {
-                        //状態は変わらない
-                        P_dash = numeric.add(P, numeric.mul(dt * dt, P_dt));
-                    }
-                    last_time = nowtime;
-                }
+            var H = [];//観測行列
+            var Z = [];//実測値ベクトル
+            var ZE = [];//推定値ベクトル
+            var R = [];//観測値の誤差分散ベクトル
 
-                var _x = [X[0],X[1],X[2]];
-                var _q = [X[3],X[4],X[5],X[6]];
+            var omega = [0.0, 0.0, 0.0];
+            if (n_motion > 0) {
+                //最後に確認してからの平均
+                omega = numeric.mul(1.0 / n_motion, latest_motion);
+                omega = numeric.mul(1.0 / 3.14156, omega);//これをかけると、なぜかちょうどよくなる
+                latest_motion = [0.0, 0.0, 0.0];
+                n_motion = 0;
+            }
+
+            //カルマンフィルタ予測
+            if (last_time == null) {
+                //初回は特になにもしない
+                last_time = Date.now();
+                P_dash = numeric.clone(P);
+            } else {
+                var nowtime = Date.now();
+                var dt = (nowtime - last_time) / 100;//100ミリ秒単位で
+                //角度変化の部分のFを作る
+                var qx = X[3], qy = X[4], qz = X[5], qw = X[6], wx = X[8], wy = X[9], wz = X[10];
+                var F_motion = [
+                    [1, wz, -wy, wx, 0, qw, -qz, qy],
+                    [-wz, 1, wx, wy, 0, qz, qw, qx],
+                    [wy, -wx, 1, wz, 0, -qy, qx, qw],
+                    [-wx, -wy, -wz, 1, 0, -qx, -qy, -qz]
+                ];
+                F_motion = numeric.mul(F_motion, dt / 10);//角速度は1秒ごとの値であるため
+                F_motion[0][0] = F_motion[1][1] = F_motion[2][2] = F_motion[3][3] = 1.0;
+                F = numeric.setBlock(F, [3, 3], [6, 10], F_motion);
+                //X更新
+                var nextq = numeric.dot(F_motion, [X[3], X[4], X[5], X[6], X[7], X[8], X[9], X[10]]);
+                nextq = numeric.mul(1.0 / numeric.norm2(nextq),nextq);
+                X[3] = nextq[0], X[4] = nextq[1], X[5] = nextq[2], X[6] = nextq[3];
+                X[8] = X[9] = X[10] = 0.0;
+                //P更新
+                P_dash = numeric.add(numeric.dot(F, numeric.dot(P, numeric.transpose(F))), numeric.mul(dt * dt, P_dt));
+                last_time = nowtime;
+            }
+
+            //各速度の観測
+            var H_motion = []
+            for (var i = 0; i < 3; i++) {
+                H_motion.push(new Array(11).fill(0.0));
+                H_motion[i][8 + i] = 1.0;
+            }
+            H = H.concat(H_motion);
+            Z = Z.concat(omega);
+            ZE = ZE.concat([0.0, 0.0, 0.0]);
+            R = R.concat([error_rot, error_rot, error_rot]);
+
+            
+
+            //マーカー観測による行列の作成
+            if (markers.length > 0) {
+                var _x = [X[0], X[1], X[2]];
+                var _q = [X[3], X[4], X[5], X[6]];
                 var _f = X[7];
 
-                //カルマンフィルタ更新
-                var H = [];
-                var Z = [];
-                var ZE = [];
-                var R = []
-                
                 for (var i = 0; i < markers.length; i++) {
                     var ret = calcHZ_marker(markers[i], _x, _q, _f);
                     H = H.concat(ret.H);
                     Z = Z.concat(ret.Z);
                     ZE = ZE.concat(ret.ZE);
-                    
-                    if (Math.min(P[0][0], P[1][1], P[2][2]) < corner_threshold) {
+
+                    if (Math.min(P[0][0], P[1][1], P[2][2]) < corner_threshold && use_corner) {
                         //精度がとれているときだけコーナーを用いる
                         R = R.concat([error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pos, error_pos, error_pos,
                             error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle
@@ -769,33 +652,34 @@ qはx,y,z,wの順
                             error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle])
                     }
                 }
+
+                markers = [];
+            }
+
+
+
+            //観測があればカルマンフィルタにより更新
+            if (R.length > 0) {
                 R = numeric.diag(R);
 
+                //カルマンフィルタ更新
                 var E = numeric.sub(Z, ZE);
                 var S = numeric.add(numeric.dot(H, numeric.dot(P_dash, numeric.transpose(H))), R);
                 var K = numeric.dot(P_dash, numeric.dot(numeric.transpose(H), numeric.inv(S)));
                 X = numeric.add(X, numeric.dot(K, E));
                 P = numeric.dot(numeric.sub(numeric.diag(new Array(K.length).fill(1.0)), numeric.dot(K, H)), P_dash);
-                
-                var tmpq = [X[3],X[4],X[5],X[6]]
+                //クォータニオンの正規化
+                var tmpq = [X[3], X[4], X[5], X[6]]
                 tmpq = numeric.div(tmpq, numeric.norm2(tmpq));
-
                 X[3] = tmpq[0];
                 X[4] = tmpq[1];
                 X[5] = tmpq[2];
                 X[6] = tmpq[3];
-
+                //焦点距離の正規化
                 if (X[7] < 1.0) {
                     X[7] = 1.0;
                 } else if (X[7] > 2.0) {
                     X[7] = 2.0;
-                }
-
-                console.log("X");
-                console.log(X);
-                console.log("P");
-                for (var i = 0; i < 8; i++) {
-                    console.log(P[i][i]);
                 }
 
                 dict["x"] = [X[0], X[1], X[2]]
@@ -804,22 +688,19 @@ qはx,y,z,wの順
                 //
                 estimater.updateEstimation(dict);
                 estimater.changeFocus(X[7]);
-                //array初期化
-                markers = [];
             }
-            
-        }, 10);
+        }, 50);
     }
 
-/**
-画像の座標は、画像の横の長さが1.0で、中央が原点、右、上が順にx,y座標となるようなものと定める
-Ax - 画像中の特徴点の画像上での位置ベクトル(x,y)を行ベクトルとする行列
-AX - 実世界での特徴点の位置ベクトル（ただし全て同一平面上にあるとする）の位置ベクトル(X,Y)を行ベクトルとする行列
-
-https://www.cs.ubc.ca/grads/resources/thesis/May09/Dubrofsky_Elan.pdf
-
-あまりよくは動いていない？
-*/
+    /**
+    画像の座標は、画像の横の長さが1.0で、中央が原点、右、上が順にx,y座標となるようなものと定める
+    Ax - 画像中の特徴点の画像上での位置ベクトル(x,y)を行ベクトルとする行列
+    AX - 実世界での特徴点の位置ベクトル（ただし全て同一平面上にあるとする）の位置ベクトル(X,Y)を行ベクトルとする行列
+    
+    https://www.cs.ubc.ca/grads/resources/thesis/May09/Dubrofsky_Elan.pdf
+    
+    あまりよくは動いていない？
+    */
     POSITEST.cameraCalibrationHomography = function (Ax, AX) {
         var A = []
         for (var i = 0; i < Ax.length; i++) {
@@ -846,3 +727,6 @@ https://www.cs.ubc.ca/grads/resources/thesis/May09/Dubrofsky_Elan.pdf
         var f = POSITEST.cameraCalibrationHomography(Ax, AX);
         return f;
     }
+
+    return POSITEST;
+})

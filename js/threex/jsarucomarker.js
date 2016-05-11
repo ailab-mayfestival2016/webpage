@@ -9,7 +9,7 @@ THREEx.JsArucoMarker = function(){
 	var _this = this;
 
 	this.debugEnabled = true;
-	this.videoScaleDown = 3;
+	this.videoScaleDown = 4;
 	this.modelSize = 1.0; //unit length
 	this.focus = 1.3;
 
@@ -64,7 +64,7 @@ THREEx.JsArucoMarker = function(){
 		context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
 		var imageData = context.getImageData(0, 0, canvasElement.width, canvasElement.height);
 
-		// detect markers
+	    // detect markers
 		var detector = new AR.Detector();
 		var markers = detector.detect(imageData);
 		//console.log("%d Markers detected at jsarucomarker",markers.length);
@@ -86,7 +86,7 @@ THREEx.JsArucoMarker = function(){
 		}
 
 		// display markers on canvas for debug
-		if( this.debugEnabled === true ){
+		if (this.debugEnabled === true) {
 			debugElement.querySelector('.info .videoScaleDown').innerHTML = this.videoScaleDown
 			if( videoElement.videoWidth !== undefined ){
 				debugElement.querySelector('.info .videoSize').innerHTML = videoElement.videoWidth + 'x' + videoElement.videoHeight
@@ -110,17 +110,21 @@ THREEx.JsArucoMarker = function(){
 		// 画面中央を0,0とし、左、上方向がそれぞれ+x,+yの座標
 		// cornersの最初の要素はマーカーの左上の頂点位置
 		//console.log("getMarkerPosition");
-		var corners = []//marker.corners;
+	    var corners = []//marker.corners;
+        //console.log("1",Date.now())
 		for (var i = 0; i < marker.corners.length; ++ i){
 			corners.push({
 				x : marker.corners[i].x - (canvasElement.width / 2),
 				y : (canvasElement.height / 2) - marker.corners[i].y,
 			})
 		}
-		// compute the pose from the canvas
-		var posit = new POS.Posit(this.modelSize, canvasElement.width*this.focus);
-		var pose = posit.pose(corners);
-		// console.assert(pose !== null)
+		//console.log("2", Date.now())
+	    // compute the pose from the canvas
+        var posit = new POS.Posit(this.modelSize, canvasElement.width * this.focus);
+        //console.log("3", Date.now())
+        var pose = posit.pose(corners);
+        //console.log("4", Date.now())
+		console.assert(pose !== null)
 		if (pose === null) return null;
 
 		normal_corners = []
@@ -128,7 +132,7 @@ THREEx.JsArucoMarker = function(){
 		    normal_corners.push([corners[i].x / canvasElement.width, corners[i].y / canvasElement.width]);
 		}
 		pose.corners = normal_corners;
-
+		//console.log("5", Date.now())
 		return pose;
 	}
 
