@@ -1,61 +1,65 @@
 
-var POSITEST = POSITEST || {};
 
-function disposeNode(node) {
-    if (node instanceof THREE.Camera) {
-        node = undefined;
-    }
-    else if (node instanceof THREE.Light) {
-        node.dispose();
-        node = undefined;
-    }
-    else if (node instanceof THREE.Mesh) {
-        if (node.geometry) {
-            node.geometry.dispose();
-            node.geometry = undefined;
+
+define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js/examples/js/controls/TrackballControls', 'js-aruco/svd', 'js-aruco/posit1-patched', 'js-aruco/cv', 'js-aruco/aruco', 'threex/webcamgrabbing', 'threex/imagegrabbing', 'threex/videograbbing', 'threex/jsarucomarker', 'numeric'], function (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12) {
+    var POSITEST = {}
+
+
+    function disposeNode(node) {
+        if (node instanceof THREE.Camera) {
+            node = undefined;
         }
-
-        if (node.material) {
-            if (node.material instanceof THREE.MeshFaceMaterial) {
-                $.each(node.material.materials, function (idx, mtrl) {
-                    if (mtrl.map) mtrl.map.dispose();
-                    if (mtrl.lightMap) mtrl.lightMap.dispose();
-                    if (mtrl.bumpMap) mtrl.bumpMap.dispose();
-                    if (mtrl.normalMap) mtrl.normalMap.dispose();
-                    if (mtrl.specularMap) mtrl.specularMap.dispose();
-                    if (mtrl.envMap) mtrl.envMap.dispose();
-
-                    mtrl.dispose();    // disposes any programs associated with the material
-                    mtrl = undefined;
-                });
-            }
-            else {
-                if (node.material.map) node.material.map.dispose();
-                if (node.material.lightMap) node.material.lightMap.dispose();
-                if (node.material.bumpMap) node.material.bumpMap.dispose();
-                if (node.material.normalMap) node.material.normalMap.dispose();
-                if (node.material.specularMap) node.material.specularMap.dispose();
-                if (node.material.envMap) node.material.envMap.dispose();
-
-                node.material.dispose();   // disposes any programs associated with the material
-                node.material = undefined;
-            }
+        else if (node instanceof THREE.Light) {
+            node.dispose();
+            node = undefined;
         }
+        else if (node instanceof THREE.Mesh) {
+            if (node.geometry) {
+                node.geometry.dispose();
+                node.geometry = undefined;
+            }
 
-        node = undefined;
-    }
-    else if (node instanceof THREE.Object3D) {
-        node = undefined;
-    }
-}   // disposeNode
+            if (node.material) {
+                if (node.material instanceof THREE.MeshFaceMaterial) {
+                    $.each(node.material.materials, function (idx, mtrl) {
+                        if (mtrl.map) mtrl.map.dispose();
+                        if (mtrl.lightMap) mtrl.lightMap.dispose();
+                        if (mtrl.bumpMap) mtrl.bumpMap.dispose();
+                        if (mtrl.normalMap) mtrl.normalMap.dispose();
+                        if (mtrl.specularMap) mtrl.specularMap.dispose();
+                        if (mtrl.envMap) mtrl.envMap.dispose();
 
-function disposeHierarchy(node, callback) {
-    for (var i = node.children.length - 1; i >= 0; i--) {
-        var child = node.children[i];
-        disposeHierarchy(child, callback);
-        callback(child);
+                        mtrl.dispose();    // disposes any programs associated with the material
+                        mtrl = undefined;
+                    });
+                }
+                else {
+                    if (node.material.map) node.material.map.dispose();
+                    if (node.material.lightMap) node.material.lightMap.dispose();
+                    if (node.material.bumpMap) node.material.bumpMap.dispose();
+                    if (node.material.normalMap) node.material.normalMap.dispose();
+                    if (node.material.specularMap) node.material.specularMap.dispose();
+                    if (node.material.envMap) node.material.envMap.dispose();
+
+                    node.material.dispose();   // disposes any programs associated with the material
+                    node.material = undefined;
+                }
+            }
+
+            node = undefined;
+        }
+        else if (node instanceof THREE.Object3D) {
+            node = undefined;
+        }
+    }   // disposeNode
+
+    function disposeHierarchy(node, callback) {
+        for (var i = node.children.length - 1; i >= 0; i--) {
+            var child = node.children[i];
+            disposeHierarchy(child, callback);
+            callback(child);
+        }
     }
-}
 
     //require
 
@@ -111,9 +115,9 @@ function disposeHierarchy(node, callback) {
         }
         return q;
     }
-/**
-qはx,y,z,wの順
-*/
+    /**
+    qはx,y,z,wの順
+    */
     POSITEST.fromQuaternionToMatrix = function(q){
         var x = q[0];
         var y = q[1];
@@ -688,15 +692,15 @@ qはx,y,z,wの順
         }, 50);
     }
 
-/**
-画像の座標は、画像の横の長さが1.0で、中央が原点、右、上が順にx,y座標となるようなものと定める
-Ax - 画像中の特徴点の画像上での位置ベクトル(x,y)を行ベクトルとする行列
-AX - 実世界での特徴点の位置ベクトル（ただし全て同一平面上にあるとする）の位置ベクトル(X,Y)を行ベクトルとする行列
-
-https://www.cs.ubc.ca/grads/resources/thesis/May09/Dubrofsky_Elan.pdf
-
-あまりよくは動いていない？
-*/
+    /**
+    画像の座標は、画像の横の長さが1.0で、中央が原点、右、上が順にx,y座標となるようなものと定める
+    Ax - 画像中の特徴点の画像上での位置ベクトル(x,y)を行ベクトルとする行列
+    AX - 実世界での特徴点の位置ベクトル（ただし全て同一平面上にあるとする）の位置ベクトル(X,Y)を行ベクトルとする行列
+    
+    https://www.cs.ubc.ca/grads/resources/thesis/May09/Dubrofsky_Elan.pdf
+    
+    あまりよくは動いていない？
+    */
     POSITEST.cameraCalibrationHomography = function (Ax, AX) {
         var A = []
         for (var i = 0; i < Ax.length; i++) {
@@ -723,3 +727,6 @@ https://www.cs.ubc.ca/grads/resources/thesis/May09/Dubrofsky_Elan.pdf
         var f = POSITEST.cameraCalibrationHomography(Ax, AX);
         return f;
     }
+
+    return POSITEST;
+})

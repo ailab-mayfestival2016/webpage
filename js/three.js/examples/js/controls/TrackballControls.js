@@ -5,9 +5,10 @@
  * @author Luca Antiga 	/ http://lantiga.github.io
  */
 
-console.log("hoge")
 
-define(["three.js/build/three"], function(){
+
+define(['three.js/build/three'],function(arg1){
+
 
     THREE.TrackballControls = function ( object, domElement ) {
 

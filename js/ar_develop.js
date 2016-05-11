@@ -1,4 +1,4 @@
-define(['io','three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js/examples/js/controls/TrackballControls', 'js-aruco/svd', 'js-aruco/posit1-patched', 'js-aruco/cv', 'js-aruco/aruco', 'threex/webcamgrabbing', 'threex/imagegrabbing', 'threex/videograbbing', 'threex/jsarucomarker', 'numeric', 'posit_est'], function (io) {
+define(['io','three.js/build/three', 'three.js/examples/js/libs/stats.min', 'numeric', 'posit_est'], function (io,a1, a2, a3, POSITEST){
     //âπê∫
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
     var context = new AudioContext();
@@ -208,7 +208,7 @@ define(['io','three.js/build/three', 'three.js/examples/js/libs/stats.min', 'thr
     scene.add(mesh);*/
     
     //ï«
-    var geometry = new THREE.PlaneGeometry(350, 400, 10, 10)
+    var geometry = new THREE.PlaneGeometry(350, 4000, 10, 10)
     var material = new THREE.MeshBasicMaterial({
         wireframe: true
     })
@@ -219,9 +219,9 @@ define(['io','three.js/build/three', 'three.js/examples/js/libs/stats.min', 'thr
     mesh.rotation.x = 3.1415 / 2.0;
     scene.add(mesh);
     //
-    var geometry = new THREE.PlaneGeometry(350, 400, 10, 10)
+    var geometry = new THREE.PlaneGeometry(350, 4000, 10, 10)
     var material = new THREE.MeshBasicMaterial({
-        wireframe: true
+        wireframe:true
     })
     var mesh = new THREE.Mesh(geometry, material);
     mesh.position.x = 175;
@@ -230,7 +230,7 @@ define(['io','three.js/build/three', 'three.js/examples/js/libs/stats.min', 'thr
     mesh.rotation.x = 3.1415 / 2.0;
     scene.add(mesh);
     //
-    var geometry = new THREE.PlaneGeometry(400, 250, 10, 10)
+    var geometry = new THREE.PlaneGeometry(4000, 250, 10, 10)
     var material = new THREE.MeshBasicMaterial({
         wireframe: true
     })
@@ -241,7 +241,7 @@ define(['io','three.js/build/three', 'three.js/examples/js/libs/stats.min', 'thr
     mesh.rotation.y = 3.1415 / 2.0;
     scene.add(mesh);
     //
-    var geometry = new THREE.PlaneGeometry(400, 250, 10, 10)
+    var geometry = new THREE.PlaneGeometry(4000, 250, 10, 10)
     var material = new THREE.MeshBasicMaterial({
         wireframe: true
     })
