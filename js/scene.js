@@ -1,8 +1,12 @@
 define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/examples/js/libs/stats.min', 'numeric', 'posit_est'], function (io,block_class, arcanoid_scene, UTILS,a1,a2,a3,POSITEST) {
     //‰¹º
     var SCENE = {};
-    SCENE.init = function(environment, stereo) {
-        var scene = new arcanoid_scene();
+    SCENE.init = function(environment, stereo, opts) {
+        var texture_set = null;
+        if (opts && opts.hires) {
+            texture_set = UTILS.HIRES_TEXTURES;
+        }
+        var scene = new arcanoid_scene(texture_set);
 
         //scene.init_controls();
         if (stereo) {
@@ -11,11 +15,11 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         }
         scene.init_environment_default();
         scene.set_environment(environment);
-        scene.init_materials(true);
+        scene.init_materials(!opts && opts.opague);
         scene.load_geometry();
         scene.create_particle_system();
         scene.animate();
-        scene.element.addEventListener('click', scene.fullscreen.bind(scene), false);
+        document.getElementById("example").addEventListener('click', scene.fullscreen.bind(scene), false);
 
         SCENE.scene = scene;
 
@@ -26,7 +30,9 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         })
         groundPlane = new THREE.Mesh(geometry, material);
         groundPlane.position.y = 250
-        scene.scene.add(groundPlane);
+        if (!opts || !opts.hide_debug) {
+            scene.scene.add(groundPlane);
+        }
 
         var geometry = new THREE.BoxGeometry(60, 1000, 10);
         var material = new THREE.MeshBasicMaterial({
@@ -67,6 +73,16 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
             SCENE.audio_complete = buffer;
         });
 
+        SCENE.phenox_mesh = null;
+        (function () {
+            var geometry = new THREE.BoxGeometry(30, 30, 30);
+            var material = new THREE.MeshNormalMaterial();
+            SCENE.phenox_mesh = new THREE.Mesh(geometry, material);
+            SCENE.phenox_mesh.position.x = 0.0;
+            SCENE.phenox_mesh.position.y = 0.0;
+            SCENE.phenox_mesh.position.z = 100.0;
+            SCENE.scene.scene.add(SCENE.phenox_mesh);
+        })();
 
         //phenox
         SCENE.phenox_pos = [0.0, 0.0, 100.0]
@@ -103,7 +119,7 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
     // ƒTƒEƒ“ƒh‚ðÄ¶
     var playSound = function (buffer) {
         // source ‚ðì¬
-        var source = context.createBufferSource();
+        var source = SCENE.context.createBufferSource();
         // buffer ‚ðƒZƒbƒg
         source.buffer = buffer;
         // context ‚É connect
@@ -123,10 +139,13 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         SCENE.bar_pos[0] = data;
     }
 
-    function event_game_init(data) {
+    function event_abort(data) {
+        //$(".background_div").show();
+    }
+    function event_opening(data) {
         $(".background_div").show();
     }
-    function event_gameplay_start(data) {
+    function event_game_start(data) {
         $(".background_div").addClass("fade");
         setTimeout(function() {
             console.log("hide")
@@ -189,6 +208,9 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
             SCENE.socket.on('gameover', event_gameover);
             SCENE.socket.on('timeup', event_timeup);
             SCENE.socket.on('map', event_map);
+            SCENE.socket.on('opening', event_opening);
+            SCENE.socket.on('game_start', event_game_start);
+            SCENE.socket.on('abort', event_abort);
             SCENE.socket.on('disconnect', function (data) {
                 SCENE.isConnected = false;
             });
@@ -218,8 +240,8 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
                 [255, 0, 0],//UTILS.PCB_COLORS[UTILS.randi(0, UTILS.PCB_COLORS.length)]
             ];
         }
-        setTimeout(event_game_init, 5000);
-        setTimeout(event_gameplay_start, 7000);
+        setTimeout(event_opening, 5000);
+        setTimeout(event_game_start, 50000);
         //setTimeout(event_game_init, 55000);
         event_map(mapp);
         var kkk = 0;
@@ -259,9 +281,9 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
             var rotz = 0.0;
         }
         var render = function () {
-            /*phenox_mesh.position.x = phenox_pos[0];
-            phenox_mesh.position.y = phenox_pos[1];
-            phenox_mesh.position.z = phenox_pos[2];*/
+            SCENE.phenox_mesh.position.x = SCENE.phenox_pos[0];
+            SCENE.phenox_mesh.position.y = SCENE.phenox_pos[1];
+            SCENE.phenox_mesh.position.z = SCENE.phenox_pos[2];
 
             SCENE.bar_mesh.position.x = SCENE.bar_pos[0];
             SCENE.bar_mesh.position.y = SCENE.bar_pos[1] - 135;
