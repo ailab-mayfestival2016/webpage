@@ -6,6 +6,7 @@ requirejs.config({
         OrbitControls: 'third-party/threejs/OrbitControls',
         StereoEffect: 'third-party/threejs/StereoEffect',
         SPE: 'third-party/SPE',
+        TrackballControls: 'three.js/examples/js/controls/TrackballControls',
     },
     shim: {
         DeviceOrientationControls: {
@@ -20,13 +21,9 @@ requirejs.config({
         SPE: {
             deps: ['three']
         },
-/*        backbone: {
-            deps: ['jquery', 'underscore'],
-            exports: 'Backbone'
-        },
-        underscore: {
-            exports: '_'
-        }*/
+        TrackballControls: {
+            deps: ['three']
+        }
     }
 });
 

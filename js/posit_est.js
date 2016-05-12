@@ -1,7 +1,7 @@
 
 
 
-define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js/examples/js/controls/TrackballControls', 'js-aruco/svd', 'js-aruco/posit1-patched', 'js-aruco/cv', 'js-aruco/aruco', 'threex/webcamgrabbing', 'threex/imagegrabbing', 'threex/videograbbing', 'threex/jsarucomarker', 'numeric'], function (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12) {
+define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js-aruco/svd', 'js-aruco/posit1-patched', 'js-aruco/cv', 'js-aruco/aruco', 'threex/webcamgrabbing', 'threex/imagegrabbing', 'threex/videograbbing', 'threex/jsarucomarker', 'numeric'], function (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12) {
     var POSITEST = {}
 
 

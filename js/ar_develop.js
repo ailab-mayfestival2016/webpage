@@ -1,4 +1,4 @@
-define(['io','three.js/build/three', 'three.js/examples/js/libs/stats.min', 'numeric', 'posit_est'], function (io,a1, a2, a3, POSITEST){
+define(['io','three', 'three.js/examples/js/libs/stats.min', 'numeric', 'posit_est'], function (io,a1, a2, a3, POSITEST){
     //âπê∫
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
     var context = new AudioContext();
