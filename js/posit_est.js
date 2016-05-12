@@ -1,7 +1,7 @@
 
 
 
-define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js/examples/js/controls/TrackballControls', 'js-aruco/svd', 'js-aruco/posit1-patched', 'js-aruco/cv', 'js-aruco/aruco', 'threex/webcamgrabbing', 'threex/imagegrabbing', 'threex/videograbbing', 'threex/jsarucomarker', 'numeric'], function (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12) {
+define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js-aruco/svd', 'js-aruco/posit1-patched', 'js-aruco/cv', 'js-aruco/aruco', 'threex/webcamgrabbing', 'threex/imagegrabbing', 'threex/videograbbing', 'threex/jsarucomarker', 'numeric'], function (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12) {
     var POSITEST = {}
 
 
@@ -424,12 +424,12 @@ define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js
         }
     }
 
-    POSITEST.runPositestKalman = function (map, dict) {
+    POSITEST.runPositestKalman = function (map, dict, opts) {
         var corner_threshold = 10000.0;//位置の分散がこれ以下のときのみコーナーの観測を用いる
         var use_corner = true;
 
         //ウェブカメラ起動
-        var imageGrabbing = new THREEx.WebcamGrabbing();
+        var imageGrabbing = new THREEx.WebcamGrabbing(opts && ('stereo' in opts) ? opts.stereo : false);
 
         //画像を表示
         document.body.appendChild(imageGrabbing.domElement);

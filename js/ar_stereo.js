@@ -1,5 +1,33 @@
-define(['io','three', 'three.js/examples/js/libs/stats.min', 'numeric', 'posit_est'], function (io,a1, a2, a3, POSITEST){
+define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/examples/js/libs/stats.min', 'numeric', 'posit_est'], function (io,block_class, arcanoid_scene, UTILS,a1,a2,a3,POSITEST) {
     //音声
+    var scene = new arcanoid_scene();
+
+    var map = [];
+    for (var i = 0; i < 16; i++) {
+        map.push({
+            x: (i % 4)* 50 - 100,
+            y: 200 + (Math.floor(i / 4))* 50,
+            color: UTILS.PCB_COLORS[UTILS.randi(0, UTILS.PCB_COLORS.length)]
+        })
+    }
+    //scene.init_controls();
+    scene.default_renderer = scene.effect;
+    scene.init_environment_default();
+    scene.set_environment("ar");
+    scene.init_blocks(map);
+    scene.load_geometry();
+    scene.create_particle_system();
+    scene.animate();
+
+    var geometry = new THREE.PlaneGeometry(100, 100, 10, 10);
+    var material = new THREE.MeshBasicMaterial({
+        wireframe: true,
+        color: 0xffffff
+    })
+    groundPlane = new THREE.Mesh(geometry, material);
+    scene.scene.add(groundPlane);
+
+
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
     var context = new AudioContext();
 
@@ -47,16 +75,6 @@ define(['io','three', 'three.js/examples/js/libs/stats.min', 'numeric', 'posit_e
         // 読み込み完了後にボタンにクリックイベントを登録
         audio_complete = buffer;
     });
-    var audio_gameover = null;
-    getAudioBuffer('/sound/gameover.mp3', function (buffer) {
-        // 読み込み完了後にボタンにクリックイベントを登録
-        audio_gameover = buffer;
-    });
-    var audio_hit = null;
-    getAudioBuffer('/sound/hit.mp3', function (buffer) {
-        // 読み込み完了後にボタンにクリックイベントを登録
-        audio_hit = buffer;
-    });
 
 
     //phenox
@@ -70,19 +88,19 @@ define(['io','three', 'three.js/examples/js/libs/stats.min', 'numeric', 'posit_e
     //イベントハンドラ
     function event_px_position(data) {
         phenox_pos[0] = data[0];
-        phenox_pos[1] = data[1];
+        phenox_pos[1] = data[1] + 200.0;
     }
     function event_bar_position(data) {
 
     }
     function event_reflect(data) {
         console.log("reflect")
-        playSound(audio_bound); 
+        playSound(audio_bound);
+
     }
     function event_hit(data) {
         deleteBlock(data);
-        playSound(audio_hit);
-        console.log("hit");
+        console.log("hit")
     }
     function event_complete(data) {
         console.log("complete")
@@ -90,11 +108,9 @@ define(['io','three', 'three.js/examples/js/libs/stats.min', 'numeric', 'posit_e
     }
     function event_gameover(data) {
         console.log("game over")
-        playSound(audio_gameover);
     }
     function event_timeup(data) {
         console.log("time up")
-        playSound(audio_gameover);
     }
     function event_map(data) {
         console.log("get map")
@@ -107,7 +123,7 @@ define(['io','three', 'three.js/examples/js/libs/stats.min', 'numeric', 'posit_e
             var block = {
                 id: key,
                 x: block[0],
-                y: block[1]+200,
+                y: block[1] + 200,
                 xL: block[2],
                 yL: block[3]
             }
@@ -149,69 +165,7 @@ define(['io','three', 'three.js/examples/js/libs/stats.min', 'numeric', 'posit_e
     //接続開始
     connect()
 
-
     //シーンの作成
-    var scene = new THREE.Scene();
-    //第一引数のfovは角度？
-    var camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
-
-    var renderer = new THREE.WebGLRenderer({ alpha: true });
-    renderer.setClearColor(0x000000, 0);
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.domElement.style.position = "absolute";
-    renderer.domElement.style.top = '0px';
-    renderer.domElement.style.left = '0px';
-    document.body.appendChild(renderer.domElement);
-
-    //画面サイズが変更された際のイベントハンドら
-    function onWindowReSize() {
-        camera.aspect = window.innerWidth / window.innerHeight;
-
-        camera.updateProjectionMatrix();
-
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-    window.addEventListener("resize", onWindowReSize, false);
-
-    //ふぇのっくす
-    var phenox_mesh = null;
-    (function () {
-        var geometry = new THREE.BoxGeometry(30, 30, 30);
-        var material = new THREE.MeshNormalMaterial();
-        phenox_mesh = new THREE.Mesh(geometry, material);
-        phenox_mesh.position.x = 0.0;
-        phenox_mesh.position.y = 0.0;
-        phenox_mesh.position.z = 0.0;
-        scene.add(phenox_mesh);
-    })();
-
-    //オブジェクトの作成
-
-    var mesh = new THREE.AxisHelper
-    scene.add(mesh);
-
-    var block_mesh = {};
-    var block_mother = new THREE.Object3D();
-    scene.add(block_mother);
-    function addBlock(block) {
-        var geometry = new THREE.BoxGeometry(block["xL"], block["yL"],100);
-        var material = new THREE.MeshNormalMaterial();
-        var cube = new THREE.Mesh(geometry, material);
-        cube.position.x = block["x"];
-        cube.position.y = block["y"];
-        cube.position.z = 100.0;
-        block_mother.add(cube);
-        block_mesh[block["id"]] = cube;
-    }
-    function deleteBlock(id) {
-        console.log("delte",id)
-        POSITEST.disposeHierarchy(block_mesh[id], function (child) {
-            child.parent.remove(child);
-        })
-        block_mother.remove(block_mesh[id]);
-    }
-
-    camera.position.z = 5;
 
     //カメラの座標などを保持しておく場所
     var pos = [0.0, 0.0, 5.0];
@@ -224,60 +178,40 @@ define(['io','three', 'three.js/examples/js/libs/stats.min', 'numeric', 'posit_e
         { "id": 100, "pos": [-150.0, 382.0, 97.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 85.0 },
         { "id": 150, "pos": [-72.0, 505.0, 87.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 },
         { "id": 90, "pos": [72.0, 460.0, 82.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 }
-    ]
+    ];
 
-    POSITEST.runPositestKalman(map, dict);
+    //内部でdictを更新し続ける位置推定ルーチンを動かす
+    POSITEST.runPositestKalman(map, dict, {stereo: true});
 
     var rotx = 0.0;
     var roty = 0.0;
     var rotz = 0.0;
     var render = function () {
-        requestAnimationFrame(render);
-
-        //phenoxの位置更新
-        phenox_mesh.position.x = phenox_pos[0];
-        phenox_mesh.position.y = phenox_pos[1];
-        phenox_mesh.position.z = phenox_pos[2];
-
-        //
         f = dict["f"];
-        //f = 1.3;
-        var fovW = Math.atan2(0.5, f) *2 * 180 / 3.1415;//canvas横の視野角
+        var fovW = Math.atan2(0.5, f) * 2 * 180 / 3.1415;//canvas横の視野角
         if (dict["video"] != null) {
             var video = dict["video"];
             var vW = video.videoWidth;
             var vH = video.videoHeight;
-            if (vW / vH > window.innerHeight / window.innerWidth) {//videoが縦長
-                fovW *= (vH * window.innerWidth / vW / window.innerHeight);
+            if (vW / vH > window.innerHeight/ window.innerWidth) {//videoが縦長
+                fovW *= (vH * (window.innerWidth) / vW / window.innerHeight);
             }
             else {//videoが横長
                 //横の角度は変わらないのでなにもしない
             }
         }
-        camera.fov = fovW * window.innerHeight / window.innerWidth;
-        camera.updateProjectionMatrix()
-        camera.position.x = dict["x"][0];
-        camera.position.y = dict["x"][1];
-        camera.position.z = dict["x"][2];
-        //RzRyRx行列の各行が順にグローバル座標でのi,j,kとなっているから転置
+        scene.camera.fov = fovW * window.innerHeight/ window.innerWidth;
+        scene.camera.updateProjectionMatrix()
+        scene.camera.position.x = dict["x"][0];
+        scene.camera.position.y = dict["x"][1];
+        scene.camera.position.z = dict["x"][2];
+        //RzRyRx行列の各列が順にグローバル座標でのi,j,kとなっているから転置
         var q = POSITEST.fromMatrixToQuaternion(numeric.transpose(dict["R"]));
-        var quaternion = camera.quaternion;
-        quaternion.set(q[0],q[1], q[2], q[3]);
+        var quaternion = scene.camera.quaternion;
+        quaternion.set(q[0], q[1], q[2], q[3]);
         quaternion.normalize();
-
-        /*
-        console.log("--------------")
-        console.log(dict["x"]);
-        for (var i = 0; i < 3; i++) {
-            console.log(dict["R"][i])
-        }
-        */
-
-        //描画
-        renderer.render(scene, camera);
     }
 
-    //Chromeならconsole.logでデバッグ表示できる
-    console.log("render loop start!!");
-    render();
+    setInterval(render, 20);
+
 });

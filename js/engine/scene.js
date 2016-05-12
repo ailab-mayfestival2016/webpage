@@ -1,17 +1,23 @@
 define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect', 'DeviceOrientationControls', 'SPE'], function (UTILS, block_class) {
-    var arcanoid_scene = function() {
+    var arcanoid_scene = function(texture_set) {
         this.blocks = [];
-        this.init(); 
+        this.init(texture_set); 
         window.addEventListener('resize', this.resize.bind(this), false);
         setTimeout(this.resize.bind(this), 1);
     }
 
 
-    arcanoid_scene.prototype.init = function() {
+    arcanoid_scene.prototype.init = function(texture_set) {
+        this.texture_set = texture_set;
+        if (!this.texture_set) {
+            this.texture_set = UTILS.LOWRES_TEXTURES;
+        }
+        console.log(texture_set)
         this.clock = new THREE.Clock();
         this.renderer = new THREE.WebGLRenderer({ alpha: true });
         this.renderer.setPixelRatio(window.devicePixelRatio ? window.devicePixelRatio : 1);
         console.log(window.devicePixelRatio);
+        this.default_renderer = this.renderer;
 
 
         this.loader = new THREE.JSONLoader(); // init the loader util
@@ -23,13 +29,19 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
 
         this.scene = new THREE.Scene();
 
-        this.camera = new THREE.PerspectiveCamera(90, 1, 0.001, 1000);
-        this.camera.position.set(0, 20, 0);
+        this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 5000);//90, 1, 0.001, 1000);
+        this.camera.position.set(-100, 50, 200);
+        this.camera.up.set(0, 0, 1);
         this.scene.add(this.camera);
+
+        this.block_holder = new THREE.Object3D();
+        this.scene.add(this.block_holder);
+
 
     }
 
     arcanoid_scene.prototype.set_environment = function(type) {
+        this.environment = type;
         if (type == "ar") {
             this.renderer.setClearColor(0x000000, 0);
         } else if (type == "projector") {
@@ -44,10 +56,11 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
                 vertexShader: shader.vertexShader,
                 uniforms: shader.uniforms,
                 depthWrite: false,
+                depthTest: false,
                 side: THREE.BackSide
             });
             this.skybox = new THREE.Mesh(
-                new THREE.CubeGeometry(1000, 1000, 1000),
+                new THREE.CubeGeometry(2000, 2000, 2000),
                 skyBoxMaterial
             );
 
@@ -56,15 +69,22 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
         }
     }
 
+    arcanoid_scene.prototype.set_render_callback = function(callback) {
+        this.render_callback = callback;
+    }
+    arcanoid_scene.prototype.set_update_callback = function(callback) {
+        this.update_callback = callback;
+    }
+
     arcanoid_scene.prototype.init_controls = function() {
-        this.controls = new THREE.OrbitControls(this.camera, this.element);
+        /*this.controls = new THREE.OrbitControls(this.camera, this.element);
         this.controls.rotateUp(Math.PI / 4);
-        this.controls.target.set(
-            this.camera.position.x + 0.1,
+        this.controls.target.set(//0, 300, 0);
+        //    this.camera.position.x + 0.1,
             this.camera.position.y,
             this.camera.position.z
-        );
-        window.addEventListener('deviceorientation', this.set_orientation_controls.bind(this), true);
+        );///
+        window.addEventListener('deviceorientation', this.set_orientation_controls.bind(this), true);*/
     }
     arcanoid_scene.prototype.fullscreen = function() {
         if (this.container.requestFullscreen) {
@@ -88,7 +108,7 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
 
         this.element.addEventListener('click', this.fullscreen.bind(this), false);
 
-        window.removeEventListener('deviceorientation', set_orientation_controls(this), true);
+        window.removeEventListener('deviceorientation', this.set_orientation_controls(this), true);
     }
     arcanoid_scene.prototype.init_environment_default = function() {
         //creating skymap
@@ -115,39 +135,6 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
       var light = new THREE.DirectionalLight( 0xccccff, 1 );
       light.position.set( -1, 0.75, -0.5 );
       this.scene.add( light );
-
-
-        /*
-        var texture = THREE.ImageUtils.loadTexture(
-            'textures/patterns/checker.png'
-        );
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat = new THREE.Vector2(50, 50);
-        texture.anisotropy = renderer.getMaxAnisotropy();
-
-        var material = new THREE.MeshPhongMaterial({
-            color: 0xffffff,
-            specular: 0xffffff,
-            shininess: 20,
-            shading: THREE.FlatShading,
-            map: texture
-        });
-        // var spotLight = new THREE.SpotLight( 0xffffff ); 
-        //     spotLight.position.set( -250, 250, -250 );  
-        //     spotLight.castShadow = true;  
-        //     spotLight.shadowMapWidth = 1024; 
-        //     spotLight.shadowMapHeight = 1024;  
-        //     spotLight.shadowCameraNear = 500; 
-        //     spotLight.shadowCameraFar = 4000; 
-        //     spotLight.shadowCameraFov = 30; 
-        //     scene.add( spotLight );
-        var geometry = new THREE.PlaneGeometry(1000, 1000);
-
-        var mesh = new THREE.Mesh(geometry, material);
-        mesh.rotation.x = -Math.PI / 2;
-        //scene.add(mesh);
-        */
     }
     arcanoid_scene.prototype.init_blocks = function(map) {
         var circuit_materials = {};
@@ -156,17 +143,19 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
             shininess: 300.0,
             specular: 0xffffff,
             shading: THREE.FlatShading,
+            transparent: true,
+            emissive: 0xf0f0f0,
             normalMap: THREE.ImageUtils.loadTexture(
-                'resources/textures/block_normals.png'
+                this.texture_set.block_normals
             ),
             map: THREE.ImageUtils.loadTexture(
-                'resources/textures/block_occlusion.png'
+                this.texture_set.block_occlusion
             ),
             envMap: this.cubemap,
         });
 
-        var circuit_texture = THREE.ImageUtils.loadTexture('resources/textures/pcb.png');
-        var circuit_gradient_texture = THREE.ImageUtils.loadTexture('resources/textures/pcb_gradient.png');
+        var circuit_texture = THREE.ImageUtils.loadTexture(this.texture_set.pcb);
+        var circuit_gradient_texture = THREE.ImageUtils.loadTexture(this.texture_set.pcb_gradient);
 
         var vertShader =
             "varying vec2 vUv;\
@@ -265,7 +254,7 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
             block.circuit_mesh.material.uniforms.pcb.value = circuit_texture;
             block.circuit_mesh.material.uniforms.freq.value = block.freq;
             block.circuit_mesh.material.uniforms.shift.value = block.sh;
-            block.rotate(0, UTILS.randi(0, 4) * Math.PI / 2, 0);
+            block.rotate(Math.PI / 2, UTILS.randi(0, 4) * Math.PI / 2, 0);
             block.move(map[i].x, map[i].y);
 
             this.blocks.push(block);
@@ -295,7 +284,7 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
                 mesh.rotation.copy(this.blocks[i].block_mesh.rotation);
                 mesh.scale.copy(this.blocks[i].block_mesh.scale);
                 this.blocks[i].block_mesh = mesh;
-                this.scene.add(mesh);
+                this.block_holder.add(this.blocks[i].block_mesh);
             }
         }.bind(this));
 
@@ -303,7 +292,7 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
             // create a new material
             this.circuit_geometry = geometry;
 
-            for (var i = 0; i < 100; i++) {
+            for (var i = 0; i < this.blocks.length; i++) {
                 var mesh = new THREE.Mesh(
                     this.circuit_geometry,
                     this.blocks[i].circuit_mesh.material
@@ -364,9 +353,9 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
             duration: 1,
             activeMultiplier: 20,
             velocity: {
-                value: new THREE.Vector3( 10 )
+                value: new THREE.Vector3( 50 )
             },
-            size: { value: [20, 100] },
+            size: { value: [100, 500] },
             color: {
                 value: [
                     new THREE.Color( 0.5, 0.1, 0.05 ),
@@ -377,20 +366,22 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
         };
         this.group = new SPE.Group({
             texture: {
-                value: THREE.ImageUtils.loadTexture('resources/textures/spark.jpg')
+                value: THREE.ImageUtils.loadTexture(this.texture_set.spark)
             },
+            depthTest: true,
+            depthWrite: false,
             blending: THREE.AdditiveBlending
         });
         this.explosion_group = new SPE.Group( {
             texture: {
-                value: THREE.ImageUtils.loadTexture( 'resources/textures/sprite-explosion2.png' ),
+                value: THREE.ImageUtils.loadTexture(this.texture_set.explosion),
                 frames: new THREE.Vector2( 5, 5 ),
                 loop: 1
             },
             depthTest: true,
             depthWrite: false,
             blending: THREE.AdditiveBlending,
-            scale: 600
+            scale: 1600
         } );
         this.particle_system_pos = new THREE.Vector3();
 
@@ -408,7 +399,7 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
         }.bind(this), 1000);
         var k = 0;
         setInterval(function(){
-            var n = (k%10)*10 + Math.floor(k/10);
+            var n = (k%4)*4 + Math.floor(k/4);
             this.kill_block(n);
             k++;
         }.bind(this), 10000)
@@ -426,27 +417,35 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
     arcanoid_scene.prototype.kill_block = function(i) {
         if (i in this.blocks) {
             this.blocks[i].deadTime = this.clock.elapsedTime;
-            this.group.triggerPoolEmitter( 1, (this.particle_system_pos.set( this.blocks[i].block_mesh.position.x-5, this.blocks[i].block_mesh.position.y + 10, this.blocks[i].block_mesh.position.z )));
-            this.explosion_group.triggerPoolEmitter( 1, (this.particle_system_pos.set( this.blocks[i].block_mesh.position.x-5, this.blocks[i].block_mesh.position.y + 10, this.blocks[i].block_mesh.position.z )));
+            this.group.triggerPoolEmitter( 1, (this.particle_system_pos.set( this.blocks[i].block_mesh.position.x-50*UTILS.BLOCK_SCALE_FACTOR, this.blocks[i].block_mesh.position.y, this.blocks[i].block_mesh.position.z + 100*UTILS.BLOCK_SCALE_FACTOR )));
+            this.explosion_group.triggerPoolEmitter( 1, (this.particle_system_pos.set( this.blocks[i].block_mesh.position.x-50*UTILS.BLOCK_SCALE_FACTOR, this.blocks[i].block_mesh.position.y, this.blocks[i].block_mesh.position.z + 100*UTILS.BLOCK_SCALE_FACTOR )));
         }
     }
 
     arcanoid_scene.prototype.update = function(dt) {
         this.resize();
 
-        this.camera.updateProjectionMatrix();
+        if (this.environment != "ar" && this.controls) {
+            this.camera.updateProjectionMatrix();
 
-        this.controls.update(dt);
+            this.controls.update(dt);
+        }
+
+        this.group.tick(dt);
+        this.explosion_group.tick(dt);
+        if (this.update_callback) {
+            this.update_callback(dt);
+        }
         /*if (this.particle_system.isActive) {
             this.particle_system.update(dt);
         }*/
     }
 
     arcanoid_scene.prototype.render = function(dt) {
-        /*effect*/
-        this.renderer.render(this.scene, this.camera);
-        this.group.tick(dt);
-        this.explosion_group.tick(dt);
+        this.default_renderer.render(this.scene, this.camera);
+        if (this.render_callback) {
+            this.render_callback(dt);
+        }
     }
 
     arcanoid_scene.prototype.animate = function(t) {

@@ -1,5 +1,5 @@
 define(['engine/block', 'engine/scene', 'engine/utils'], function (block_class, arcanoid_scene, UTILS) {
-    var scene = new arcanoid_scene();
+    var scene = new arcanoid_scene(UTILS.HIRES_TEXTURES);
 
     var map = [];
     for (var i = 0; i < 16; i++) {
@@ -9,7 +9,7 @@ define(['engine/block', 'engine/scene', 'engine/utils'], function (block_class, 
             color: UTILS.PCB_COLORS[UTILS.randi(0, UTILS.PCB_COLORS.length)]
         })
     }
-    scene.camera.position.set(0, -600, 200);
+    scene.camera.position.set(-100, 50, 300);
     scene.controls = new THREE.OrbitControls(scene.camera, scene.element);
     scene.controls.rotateUp(Math.PI / 4);
     scene.controls.target.set(//0, 300, 0);
@@ -24,4 +24,9 @@ define(['engine/block', 'engine/scene', 'engine/utils'], function (block_class, 
     scene.load_geometry();
     scene.create_particle_system();
     scene.animate();
+    scene.element.addEventListener('click', scene.fullscreen.bind(scene), false);
+
+    scene.set_update_callback(function(dt) {
+        scene.camera.position.set(600*Math.cos(this.clock.elapsedTime/4.0), 600*Math.sin(this.clock.elapsedTime/4.0), scene.camera.position.z);
+    });
 });
