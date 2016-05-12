@@ -512,17 +512,20 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
                 var Hx = createPointH(p, x, q, f, didq, djdq, dkdq);
                 if (use_corner) {
                     if (Hx.validity) {
-                        //観測行列
-                        H_marker.push(Hx.H[0]);
-                        H_marker.push(Hx.H[1]);
-                        //実測値
-                        Z_marker.push(marker["C"][_i][0]);
-                        Z_marker.push(marker["C"][_i][1]);
-                        //推定値
-                        z_est.push(Hx.Z[0]);
-                        z_est.push(Hx.Z[1]);
-                        //測定誤差
-                        R_marker = R_marker.concat([error_pixel,error_pixel])
+                        var delta_max = Math.max(Math.abs(Hx.Z[0] - marker["C"][_i][0]), Math.abs(Hx.Z[1] - marker["C"][_i][1]));
+                        if (delta_max < 0.5) {
+                            //観測行列
+                            H_marker.push(Hx.H[0]);
+                            H_marker.push(Hx.H[1]);
+                            //実測値
+                            Z_marker.push(marker["C"][_i][0]);
+                            Z_marker.push(marker["C"][_i][1]);
+                            //推定値
+                            z_est.push(Hx.Z[0]);
+                            z_est.push(Hx.Z[1]);
+                            //測定誤差
+                            R_marker = R_marker.concat([error_pixel, error_pixel])
+                        }
                     }
                 }
             }
@@ -566,7 +569,7 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
         var s_init_pos = 1000000.0;
         var s_init_angle = 100.0;
         var s_init_focus = 0.1;
-        var s_init_rot = 0.1;
+        var s_init_rot = 1.0;
         var P = numeric.diag([s_init_pos, s_init_pos, s_init_pos, s_init_angle, s_init_angle, s_init_angle, s_init_angle, s_init_focus,
         s_init_rot,s_init_rot,s_init_rot]);
         var P_dash = null;
@@ -581,7 +584,7 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
         }
 
         //100ミリ秒くらいでの誤差の増分
-        var s_dt_pos = 10.0;
+        var s_dt_pos = 1.0;
         var s_dt_angle = 0.0;
         var s_dt_focus = 0.00001;
         var s_dt_rot = 0.01;
@@ -591,7 +594,7 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
         var error_pixel = 0.001;
         var error_pos = 10000.0;
         var error_angle = 0.2;
-        var error_rot = 0.001;
+        var error_rot = 0.0001;
 
         var last_time = null;
 
