@@ -248,6 +248,28 @@ define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js
             })
             this.scene.estimatePose = new THREE.Mesh(geometry, material);
             this.scene.scene.add(this.scene.estimatePose);
+            //
+            geometry = new THREE.Geometry();
+            geometry.vertices.push(new THREE.Vector3(0.0, 0.0, 100.0));
+            geometry.vertices.push(new THREE.Vector3(-50.0, 25.0, 0.0));
+            var line = new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: 0x00ff00 }));
+            this.scene.estimatePose.add(line);
+            //
+            geometry = new THREE.Geometry();
+            geometry.vertices.push(new THREE.Vector3(0.0, 0.0, 100.0));
+            geometry.vertices.push(new THREE.Vector3(50.0, 25.0, 0.0));
+            line = new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: 0x0000ff }));
+            this.scene.estimatePose.add(line);
+            geometry = new THREE.Geometry();
+            geometry.vertices.push(new THREE.Vector3(0.0, 0.0, 100.0));
+            geometry.vertices.push(new THREE.Vector3(50.0, -25.0, 0.0));
+            line = new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: 0x0000ff }));
+            this.scene.estimatePose.add(line);
+            geometry = new THREE.Geometry();
+            geometry.vertices.push(new THREE.Vector3(0.0, 0.0, 100.0));
+            geometry.vertices.push(new THREE.Vector3(-50.0, -25.0, 0.0));
+            line = new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: 0x0000ff }));
+            this.scene.estimatePose.add(line);
             //床面
             var BaseLen = 1000;
             geometry = new THREE.PlaneGeometry(BaseLen, BaseLen, 10, 10);
@@ -404,7 +426,7 @@ define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js
 
     POSITEST.runPositestKalman = function (map, dict) {
         var corner_threshold = 10000.0;//位置の分散がこれ以下のときのみコーナーの観測を用いる
-        var use_corner = false;
+        var use_corner = true;
 
         //ウェブカメラ起動
         var imageGrabbing = new THREEx.WebcamGrabbing();
@@ -555,7 +577,7 @@ define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js
         var P_dt = numeric.diag([s_dt_pos, s_dt_pos, s_dt_pos, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_focus,
         s_dt_rot,s_dt_rot,s_dt_rot]);
         //観測誤差
-        var error_pixel = 0.01;
+        var error_pixel = 0.001;
         var error_pos = 10000.0;
         var error_angle = 0.2;
         var error_rot = 0.001;
@@ -568,8 +590,26 @@ define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js
         var n_motion = 0;//足し合わせてあった数
         function motionEventHandler(event) {
             var motion = [event.rotationRate.alpha, event.rotationRate.beta, event.rotationRate.gamma];
+            var sc_ori = screen.orientation.angle;//角速度は画面の向きが縦向きか横向きかにかかわらず表示されるのでそれの補正を行う
+            //カメラ座標の向き+I,J,Kと角速度の軸+X,Y,Zの対応
+            var newmotion = null;
+            //console.log(sc_ori);
+            if (sc_ori == 0) {
+                //+I=+X, +J=+Y
+                newmotion = [motion[0], motion[1], motion[2]];
+            } else if (sc_ori == 90) {
+                //+J=+X,-I=+Y
+                newmotion = [-motion[1], motion[0], motion[2]];
+            } else if (sc_ori == 180) {
+                //+I=-X, +J=-Y
+                newmotion = [-motion[0], -motion[1], motion[2]];
+            } else if (sc_ori == 270) {
+                newmotion = [motion[1], -motion[0], motion[2]];
+            }
+            motion = newmotion;
             latest_motion = numeric.add(latest_motion, motion);
             n_motion += 1;
+            //console.log(motion)
         }
         window.addEventListener('devicemotion', motionEventHandler);
 
