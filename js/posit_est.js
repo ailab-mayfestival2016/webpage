@@ -442,6 +442,7 @@ define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js
         //カルマンフィルタの状態ベクトルは x,q,f,omegaの順
         //カルマンフィルタ関数群
         //pxとpy(画像中心が原点で横の長さが1.0のやつ)に対する観測行列部分を作成する mは点の座標
+        //もしm_x_kが正なら、まずいことになるのでこの点の情報を捨てられるようにする
         function createPointH(m, x,q,f,didq,djdq,dkdq) {
             var Hx = []
             for (var _i = 0; _i < 2; _i++) {
@@ -478,7 +479,8 @@ define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js
             
             return {
                 H: Hx,
-                Z: z_est
+                Z: z_est,
+                validity: !(m_x_k > 0.0)
             }
         }
         function calcHZ_marker(marker, x, q, f) {
@@ -500,6 +502,7 @@ define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js
             var H_marker = []
             var Z_marker = []
             var z_est = []
+            var R_marker = []
             //各マーカー頂点
             var L = marker["size"]/2;
             var vertice = [[-L, L, 0], [L, L, 0], [L, -L, 0], [-L, -L, 0]];
@@ -507,17 +510,20 @@ define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js
                 var p = numeric.dot(marker["Rm"], vertice[_i]);
                 p = numeric.add(marker["Xm"], p);
                 var Hx = createPointH(p, x, q, f, didq, djdq, dkdq);
-                if (Math.min(P[0][0], P[1][1], P[2][2]) < corner_threshold && use_corner) {
-                    //ある程度精度が確保できているときのみコーナーによる推定を行う
-                    //観測行列
-                    H_marker.push(Hx.H[0]);
-                    H_marker.push(Hx.H[1]);
-                    //実測値
-                    Z_marker.push(marker["C"][_i][0]);
-                    Z_marker.push(marker["C"][_i][1]);
-                    //推定値
-                    z_est.push(Hx.Z[0]);
-                    z_est.push(Hx.Z[1]);
+                if (use_corner) {
+                    if (Hx.validity) {
+                        //観測行列
+                        H_marker.push(Hx.H[0]);
+                        H_marker.push(Hx.H[1]);
+                        //実測値
+                        Z_marker.push(marker["C"][_i][0]);
+                        Z_marker.push(marker["C"][_i][1]);
+                        //推定値
+                        z_est.push(Hx.Z[0]);
+                        z_est.push(Hx.Z[1]);
+                        //測定誤差
+                        R_marker = R_marker.concat([error_pixel,error_pixel])
+                    }
                 }
             }
             //直接観測と推定値の部分
@@ -528,6 +534,7 @@ define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js
                 H_marker.push(tmp);
             }
             var est_x = numeric.add(marker["Xm"], numeric.dot(marker["GR1"], marker["D1"]));
+            R_marker = R_marker.concat([error_pos, error_pos, error_pos]);
             //IJK
             var start_i = H_marker.length;
             for (var i = 0; i < 9; i++) {
@@ -542,10 +549,14 @@ define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js
 
             R_T = POSITEST.fromQuaternionToMatrix(q);//fromQuaternionTOMatrixの戻り値において各行がカメラ座標系の基底
             z_est = z_est.concat(x, R_T[0], R_T[1], R_T[2]);
+            R_marker = R_marker.concat([error_angle, error_angle, error_angle]);
+            R_marker = R_marker.concat([error_angle, error_angle, error_angle]);
+            R_marker = R_marker.concat([error_angle, error_angle, error_angle]);
             return {
                 H: H_marker,
                 Z: Z_marker,
-                ZE: z_est
+                ZE: z_est,
+                R: R_marker
             }
         }
         
@@ -683,16 +694,7 @@ define(['three.js/build/three', 'three.js/examples/js/libs/stats.min', 'three.js
                     H = H.concat(ret.H);
                     Z = Z.concat(ret.Z);
                     ZE = ZE.concat(ret.ZE);
-
-                    if (Math.min(P[0][0], P[1][1], P[2][2]) < corner_threshold && use_corner) {
-                        //精度がとれているときだけコーナーを用いる
-                        R = R.concat([error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pos, error_pos, error_pos,
-                            error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle
-                        ])
-                    } else {
-                        R = R.concat([error_pos, error_pos, error_pos,
-                            error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle])
-                    }
+                    R = R.concat(ret.R);
                 }
 
                 markers = [];
