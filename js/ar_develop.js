@@ -109,7 +109,10 @@ define(['io','three', 'three.js/examples/js/libs/stats.min', 'numeric', 'posit_e
                 x: block[0],
                 y: block[1]+200,
                 xL: block[2],
-                yL: block[3]
+                yL: block[3],
+                r: block[4][0]/255.0,
+                g: block[4][1]/255.0,
+                b: block[4][2]/255.0,
             }
             block_map.push(block);
             addBlock(block);
@@ -147,7 +150,7 @@ define(['io','three', 'three.js/examples/js/libs/stats.min', 'numeric', 'posit_e
         }
     }
     //接続開始
-    connect()
+    connect();
 
 
     //シーンの作成
@@ -223,8 +226,9 @@ define(['io','three', 'three.js/examples/js/libs/stats.min', 'numeric', 'posit_e
         { "id": 10, "pos": [-150.0, 232.0, 92.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 85.0 },
         { "id": 100, "pos": [-150.0, 382.0, 97.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 85.0 },
         { "id": 150, "pos": [-72.0, 505.0, 87.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 },
-        { "id": 90, "pos": [72.0, 460.0, 82.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 }
-    ]
+        { "id": 90, "pos": [72.0, 460.0, 82.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 },
+        { "id": 70, "pos": [0.0, 71, 0.0], "mat": [[0.0, 1.0, 0.0], [-1.0, 0.0, 0.0], [0.0, 0.0, 1.0]], "size": 57.0 },
+    ];
 
     POSITEST.runPositestKalman(map, dict);
 
