@@ -402,12 +402,12 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
         }
     }
 
-    POSITEST.runPositestKalman = function (map, dict) {
+    POSITEST.runPositestKalman = function (map, dict, opts) {
         var corner_threshold = 10000.0;//位置の分散がこれ以下のときのみコーナーの観測を用いる
         var use_corner = false;
 
         //ウェブカメラ起動
-        var imageGrabbing = new THREEx.WebcamGrabbing();
+        var imageGrabbing = new THREEx.WebcamGrabbing(opts && ('stereo' in opts) ? opts.stereo : false);
 
         //画像を表示
         document.body.appendChild(imageGrabbing.domElement);

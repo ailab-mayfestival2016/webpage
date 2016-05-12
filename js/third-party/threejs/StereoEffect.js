@@ -47,7 +47,7 @@ THREE.StereoEffect = function ( renderer ) {
 
 	};
 
-	this.render = function ( scene, camera ) {
+	this.render = function ( scene, camera ) {// TODO: add clear here
 
 		scene.updateMatrixWorld();
 
@@ -102,7 +102,7 @@ THREE.StereoEffect = function ( renderer ) {
 		_cameraR.quaternion.copy( _quaternion );
 		_cameraR.translateX( this.separation / 2.0 );
 
-		//
+		//TODO: add if to clear
 
 		renderer.setViewport( 0, 0, _width * 2, _height );
 		renderer.clear();

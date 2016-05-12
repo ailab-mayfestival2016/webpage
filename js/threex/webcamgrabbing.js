@@ -8,30 +8,47 @@ window.URL = window.URL || window.webkitURL;
  * Grab camera
  * @constructor
  */
-THREEx.WebcamGrabbing = function(){
+THREEx.WebcamGrabbing = function(stereo){
 
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Comments
 	//////////////////////////////////////////////////////////////////////////////////
         // create video element
-        var domElement        = document.createElement('video')
+        var domElement        = document.createElement('video');
+        var domElement_l        = document.createElement('video');
+        var domElement_r       = document.createElement('video');
         domElement.setAttribute('autoplay', true)
 
-	// window.domElement = video
-	domElement.style.zIndex = -1;
-        domElement.style.position = 'absolute'
+    // window.domElement = video
+    domElement.style.zIndex = -2;
+    domElement.style.position = 'absolute'
 
-	// domElement.style.top = '50%'
-	// domElement.style.left = '50%'
-	// domElement.style.marginRight = '50%'
-	// domElement.style.transform = 'translate(-50%, -50%)'
-	// domElement.style.minWidth = '100%'
+    // domElement.style.top = '50%'
+    // domElement.style.left = '50%'
+    // domElement.style.marginRight = '50%'
+    // domElement.style.transform = 'translate(-50%, -50%)'
+    // domElement.style.minWidth = '100%'
 
-	domElement.style.top = '0px'
-	domElement.style.left = '0px'
-	domElement.style.width = '100%'
-	domElement.style.height = '100%'
+    domElement.style.top = '0px'
+    domElement.style.left = '0px'
+    domElement.style.width = '100%'
+    domElement.style.height = '100%'
 
+    if (stereo) {
+        domElement_l.setAttribute('autoplay', true);
+        domElement_l.style.zIndex = -1;
+        domElement_l.style.width = 'auto';
+        domElement_l.style.height = '100%';
+        domElement_l.style.left = '-50%';
+        domElement_l.style.position = 'absolute';
+
+        domElement_r.setAttribute('autoplay', true);
+        domElement_r.style.zIndex = -1;
+        domElement_r.style.width = 'auto';
+        domElement_r.style.height = '100%';
+        domElement_r.style.left = '-50%';
+        domElement_r.style.position = 'absolute';
+    }   
         /**
          * Resize video element.
          * - Made complex to handle the aspect change
@@ -101,10 +118,21 @@ THREEx.WebcamGrabbing = function(){
                 // try to get user media
                 navigator.getUserMedia( constraints, function(stream){
                         domElement.src = URL.createObjectURL(stream);
+                        if (stereo) {
+                            domElement_l.src = URL.createObjectURL(stream);
+                            domElement_r.src = URL.createObjectURL(stream);
+                        }
                 }, function(error) {
                         console.error("Cant getUserMedia()! due to ", error);
                 });
         });
 
-	this.domElement = domElement
+    this.domElement = domElement;
+    if (stereo) {
+        this.domElement_l = domElement_l;
+        this.domElement_r = domElement_r;
+        document.getElementById("left").appendChild(domElement_l);
+        document.getElementById("right").appendChild(domElement_r);
+    }
+
 }

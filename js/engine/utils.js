@@ -3,7 +3,27 @@ define([], function () {
     UTILS.PCB_COLORS = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
     UTILS.PCB_DARKEN_FACTOR = 5;
     UTILS.BLOCK_SIZE = 13;
-    UTILS.BLOCK_SCALE_FACTOR = 0.1;
+    UTILS.BLOCK_SCALE_FACTOR = 0.5;
+    UTILS.BLOCK_Z = 100.0;
+    UTILS.CENTER = [0.0, 100.0, 100.0];
+
+    UTILS.LOWRES_TEXTURES = {
+        block_normals: 'resources/textures/block_normals.png',
+        block_occlusion: 'resources/textures/block_occlusion.png',
+        pcb: 'resources/textures/pcb.png',
+        pcb_gradient: 'resources/textures/pcb_gradient.png',
+        spark: 'resources/textures/spark.jpg',
+        explosion: 'resources/textures/sprite-explosion2.png'
+    };
+
+    UTILS.HIRES_TEXTURES = {
+        block_normals: 'resources/textures/block_normals_hires.png',
+        block_occlusion: 'resources/textures/block_occlusion_hires.png',
+        pcb: 'resources/textures/pcb_hires.png',
+        pcb_gradient: 'resources/textures/pcb_gradient.png',
+        spark: 'resources/textures/spark.jpg',
+        explosion: 'resources/textures/sprite-explosion2.png'
+    };
 
     /* MISC */
     UTILS.hexToRgb = function (hex) {

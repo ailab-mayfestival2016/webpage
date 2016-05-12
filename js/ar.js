@@ -1,5 +1,34 @@
-define(['io','engine/block', 'engine/scene', 'engine/utils', 'three.js/build/three', 'three.js/examples/js/libs/stats.min', 'numeric', 'posit_est'], function (io,block_class, arcanoid_scene, UTILS,a1,a2,a3,POSITEST) {
+define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/examples/js/libs/stats.min', 'numeric', 'posit_est'], function (io,block_class, arcanoid_scene, UTILS,a1,a2,a3,POSITEST) {
     //音声
+    var scene = new arcanoid_scene();
+
+    var map = [];
+    for (var i = 0; i < 16; i++) {
+        map.push({
+            x: (i % 4)* 50 - 100,
+            y: 200 + (Math.floor(i / 4))* 50,
+            color: UTILS.PCB_COLORS[UTILS.randi(0, UTILS.PCB_COLORS.length)]
+        })
+    }
+    //scene.init_controls();
+    scene.init_environment_default();
+
+    scene.default_renderer = scene.renderer;
+    scene.set_environment("ar");
+    scene.init_blocks(map);
+    scene.load_geometry();
+    scene.create_particle_system();
+    scene.animate();
+
+    var geometry = new THREE.PlaneGeometry(100, 100, 10, 10);
+    var material = new THREE.MeshBasicMaterial({
+        wireframe: true,
+        color: 0xffffff
+    })
+    groundPlane = new THREE.Mesh(geometry, material);
+    scene.scene.add(groundPlane);
+
+
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
     var context = new AudioContext();
 
@@ -138,36 +167,19 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three.js/build/thr
     connect()
 
     //シーンの作成
-    var scene = new arcanoid_scene();
-
-    var map = [];
-    for (var i = 0; i < 100; i++) {
-        map.push({
-            x: i % 10,
-            y: Math.floor(i / 10),
-            color: UTILS.PCB_COLORS[UTILS.randi(0, UTILS.PCB_COLORS.length)]
-        })
-    }
-    scene.init_controls();
-    scene.init_environment_default();
-    scene.set_environment("ar");
-    scene.init_blocks(map);
-    scene.load_geometry();
-    scene.create_particle_system();
-    scene.animate();
 
     //カメラの座標などを保持しておく場所
-    var map = [
-        { "id": 10, "pos": [150.0, 455.0, 140.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 },
-        { "id": 100, "pos": [-130.0, 497.0, 155.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 },
-        { "id": 90, "pos": [-192.0, 397.0, 168.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 85.0 },
-        { "id": 150, "pos": [-192.0, 281.0, 205.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 85.0 },
-        { "id": 70, "pos": [-47.0, 505.0, 65.0], "mat": [[0.0, 0.0, -1.0], [1.0, 0.0, 0.0], [0.0, -1.0, 0.0]], "size": 57.0 },
-        { "id": 30, "pos": [26.0, 492.0, 190.0], "mat": [[-1.0, 0.0, 0.0], [0.0, 0.0, -1.0], [0.0, -1.0, 0.0]], "size": 57.0 }
-    ]
     var pos = [0.0, 0.0, 5.0];
     var rotation = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
-    var dict = { "x": pos, "R": rotation ,"f":1.0, "video": null};
+    var dict = { "x": pos, "R": rotation, "f": 1.0, "video": null };
+
+    //内部でdictを更新し続ける位置推定ルーチンを動かす
+    var map = [
+        { "id": 10, "pos": [-150.0, 232.0, 92.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 85.0 },
+        { "id": 100, "pos": [-150.0, 382.0, 97.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 85.0 },
+        { "id": 150, "pos": [-72.0, 505.0, 87.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 },
+        { "id": 90, "pos": [72.0, 460.0, 82.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 }
+    ]
 
     //内部でdictを更新し続ける位置推定ルーチンを動かす
     POSITEST.runPositestKalman(map, dict);
@@ -182,14 +194,14 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three.js/build/thr
             var video = dict["video"];
             var vW = video.videoWidth;
             var vH = video.videoHeight;
-            if (vW / vH > window.innerHeight / window.innerWidth) {//videoが縦長
-                fovW *= (vH * window.innerWidth / vW / window.innerHeight);
+            if (vW / vH > window.innerHeight/ window.innerWidth) {//videoが縦長
+                fovW *= (vH * (window.innerWidth) / vW / window.innerHeight);
             }
             else {//videoが横長
                 //横の角度は変わらないのでなにもしない
             }
         }
-        scene.camera.fov = fovW * window.innerHeight / window.innerWidth;
+        scene.camera.fov = fovW * window.innerHeight/ window.innerWidth;
         scene.camera.updateProjectionMatrix()
         scene.camera.position.x = dict["x"][0];
         scene.camera.position.y = dict["x"][1];

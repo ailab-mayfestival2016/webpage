@@ -1,10 +1,11 @@
-define(['third-party/threejs/three', 'engine/utils'], function (_, UTILS) {
+define(['three', 'engine/utils'], function (_, UTILS) {
     var block_class = function(block_material, opts) {
-        this.block_mesh = new THREE.Mesh(new THREE.Geometry, block_material);
+        this.block_mesh = new THREE.Mesh(new THREE.Geometry, block_material.clone());
         this.circuit_mesh = new THREE.Mesh();
         this.block_mesh.scale.x = UTILS.BLOCK_SCALE_FACTOR;
         this.block_mesh.scale.y = UTILS.BLOCK_SCALE_FACTOR;
         this.block_mesh.scale.z = UTILS.BLOCK_SCALE_FACTOR;
+        this.block_mesh.rotation.x = Math.PI/2;
         this.circuit_mesh.scale.x = UTILS.BLOCK_SCALE_FACTOR;
         this.circuit_mesh.scale.y = UTILS.BLOCK_SCALE_FACTOR;
         this.circuit_mesh.scale.z = UTILS.BLOCK_SCALE_FACTOR;
@@ -14,8 +15,8 @@ define(['third-party/threejs/three', 'engine/utils'], function (_, UTILS) {
     }
     block_class.prototype.move = function(x, y) {
         if (this.block_mesh && this.circuit_mesh) {
-            this.block_mesh.position.x = x * UTILS.BLOCK_SIZE + 50;
-            this.block_mesh.position.z = y * UTILS.BLOCK_SIZE - 65;
+            this.block_mesh.position.x = x;
+            this.block_mesh.position.y = y;
             this.circuit_mesh.position.copy(this.block_mesh.position);
         }
     }
@@ -50,13 +51,15 @@ define(['third-party/threejs/three', 'engine/utils'], function (_, UTILS) {
 
     block_class.prototype.animate = function(elapsedTime) {
         if (!this.deadTime) {
-            this.block_mesh.position.y = this.amp * Math.sin(elapsedTime / this.freq + this.sh);
-            this.circuit_mesh.position.y = this.block_mesh.position.y;
+            this.block_mesh.position.z = UTILS.BLOCK_Z + this.amp * Math.sin(elapsedTime / this.freq + this.sh);
+            this.circuit_mesh.position.z = this.block_mesh.position.z;
             this.circuit_mesh.material.uniforms.time.value = elapsedTime;
         } else {
-            this.block_mesh.position.y -= (elapsedTime - this.deadTime) * (elapsedTime - this.deadTime);
-            this.circuit_mesh.position.y = this.block_mesh.position.y;
+            this.block_mesh.position.z -= (elapsedTime - this.deadTime) * (elapsedTime - this.deadTime);
+            this.circuit_mesh.position.z = this.block_mesh.position.z;
             this.circuit_mesh.material.uniforms.color_on.value.copy(this.circuit_mesh.material.uniforms.color_off.value);
+            this.block_mesh.material.opacity = Math.max(0, 1 - (elapsedTime - Math.min(elapsedTime, this.deadTime + 1.0))/2.0);
+            this.circuit_mesh.material.uniforms.color_off.value.setW(Math.max(0, 1 - (elapsedTime - Math.min(elapsedTime, this.deadTime + 1.0))/2.0));
         }
     }
     return block_class;

@@ -7,9 +7,6 @@
 
 
 
-define(['three.js/build/three'],function(arg1){
-
-
     THREE.TrackballControls = function ( object, domElement ) {
 
         var _this = this;
@@ -626,4 +623,3 @@ define(['three.js/build/three'],function(arg1){
 
     THREE.TrackballControls.prototype = Object.create( THREE.EventDispatcher.prototype );
     THREE.TrackballControls.prototype.constructor = THREE.TrackballControls;
-})
