@@ -61,6 +61,8 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
         }
     }
 
+    POSITEST.disposeHierarchy = disposeHierarchy;
+
     //require
 
     //各軸が行
@@ -402,7 +404,7 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
 
     POSITEST.runPositestKalman = function (map, dict) {
         var corner_threshold = 10000.0;//位置の分散がこれ以下のときのみコーナーの観測を用いる
-        var use_corner = true;
+        var use_corner = false;
 
         //ウェブカメラ起動
         var imageGrabbing = new THREEx.WebcamGrabbing();
@@ -553,8 +555,8 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
         var P_dt = numeric.diag([s_dt_pos, s_dt_pos, s_dt_pos, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_focus,
         s_dt_rot,s_dt_rot,s_dt_rot]);
         //観測誤差
-        var error_pixel = 0.001;
-        var error_pos = 100000.0;
+        var error_pixel = 0.01;
+        var error_pos = 10000.0;
         var error_angle = 0.2;
         var error_rot = 0.001;
 
