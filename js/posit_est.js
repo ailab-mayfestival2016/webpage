@@ -248,6 +248,28 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
             })
             this.scene.estimatePose = new THREE.Mesh(geometry, material);
             this.scene.scene.add(this.scene.estimatePose);
+            //
+            geometry = new THREE.Geometry();
+            geometry.vertices.push(new THREE.Vector3(0.0, 0.0, 100.0));
+            geometry.vertices.push(new THREE.Vector3(-50.0, 25.0, 0.0));
+            var line = new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: 0x00ff00 }));
+            this.scene.estimatePose.add(line);
+            //
+            geometry = new THREE.Geometry();
+            geometry.vertices.push(new THREE.Vector3(0.0, 0.0, 100.0));
+            geometry.vertices.push(new THREE.Vector3(50.0, 25.0, 0.0));
+            line = new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: 0x0000ff }));
+            this.scene.estimatePose.add(line);
+            geometry = new THREE.Geometry();
+            geometry.vertices.push(new THREE.Vector3(0.0, 0.0, 100.0));
+            geometry.vertices.push(new THREE.Vector3(50.0, -25.0, 0.0));
+            line = new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: 0x0000ff }));
+            this.scene.estimatePose.add(line);
+            geometry = new THREE.Geometry();
+            geometry.vertices.push(new THREE.Vector3(0.0, 0.0, 100.0));
+            geometry.vertices.push(new THREE.Vector3(-50.0, -25.0, 0.0));
+            line = new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: 0x0000ff }));
+            this.scene.estimatePose.add(line);
             //床面
             var BaseLen = 1000;
             geometry = new THREE.PlaneGeometry(BaseLen, BaseLen, 10, 10);
@@ -404,7 +426,7 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
 
     POSITEST.runPositestKalman = function (map, dict, opts) {
         var corner_threshold = 10000.0;//位置の分散がこれ以下のときのみコーナーの観測を用いる
-        var use_corner = false;
+        var use_corner = true;
 
         //ウェブカメラ起動
         var imageGrabbing = new THREEx.WebcamGrabbing(opts && ('stereo' in opts) ? opts.stereo : false);
@@ -420,6 +442,7 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
         //カルマンフィルタの状態ベクトルは x,q,f,omegaの順
         //カルマンフィルタ関数群
         //pxとpy(画像中心が原点で横の長さが1.0のやつ)に対する観測行列部分を作成する mは点の座標
+        //もしm_x_kが正なら、まずいことになるのでこの点の情報を捨てられるようにする
         function createPointH(m, x,q,f,didq,djdq,dkdq) {
             var Hx = []
             for (var _i = 0; _i < 2; _i++) {
@@ -456,7 +479,8 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
             
             return {
                 H: Hx,
-                Z: z_est
+                Z: z_est,
+                validity: !(m_x_k > 0.0)
             }
         }
         function calcHZ_marker(marker, x, q, f) {
@@ -478,6 +502,7 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
             var H_marker = []
             var Z_marker = []
             var z_est = []
+            var R_marker = []
             //各マーカー頂点
             var L = marker["size"]/2;
             var vertice = [[-L, L, 0], [L, L, 0], [L, -L, 0], [-L, -L, 0]];
@@ -485,17 +510,20 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
                 var p = numeric.dot(marker["Rm"], vertice[_i]);
                 p = numeric.add(marker["Xm"], p);
                 var Hx = createPointH(p, x, q, f, didq, djdq, dkdq);
-                if (Math.min(P[0][0], P[1][1], P[2][2]) < corner_threshold && use_corner) {
-                    //ある程度精度が確保できているときのみコーナーによる推定を行う
-                    //観測行列
-                    H_marker.push(Hx.H[0]);
-                    H_marker.push(Hx.H[1]);
-                    //実測値
-                    Z_marker.push(marker["C"][_i][0]);
-                    Z_marker.push(marker["C"][_i][1]);
-                    //推定値
-                    z_est.push(Hx.Z[0]);
-                    z_est.push(Hx.Z[1]);
+                if (use_corner) {
+                    if (Hx.validity) {
+                        //観測行列
+                        H_marker.push(Hx.H[0]);
+                        H_marker.push(Hx.H[1]);
+                        //実測値
+                        Z_marker.push(marker["C"][_i][0]);
+                        Z_marker.push(marker["C"][_i][1]);
+                        //推定値
+                        z_est.push(Hx.Z[0]);
+                        z_est.push(Hx.Z[1]);
+                        //測定誤差
+                        R_marker = R_marker.concat([error_pixel,error_pixel])
+                    }
                 }
             }
             //直接観測と推定値の部分
@@ -506,6 +534,7 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
                 H_marker.push(tmp);
             }
             var est_x = numeric.add(marker["Xm"], numeric.dot(marker["GR1"], marker["D1"]));
+            R_marker = R_marker.concat([error_pos, error_pos, error_pos]);
             //IJK
             var start_i = H_marker.length;
             for (var i = 0; i < 9; i++) {
@@ -520,10 +549,14 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
 
             R_T = POSITEST.fromQuaternionToMatrix(q);//fromQuaternionTOMatrixの戻り値において各行がカメラ座標系の基底
             z_est = z_est.concat(x, R_T[0], R_T[1], R_T[2]);
+            R_marker = R_marker.concat([error_angle, error_angle, error_angle]);
+            R_marker = R_marker.concat([error_angle, error_angle, error_angle]);
+            R_marker = R_marker.concat([error_angle, error_angle, error_angle]);
             return {
                 H: H_marker,
                 Z: Z_marker,
-                ZE: z_est
+                ZE: z_est,
+                R: R_marker
             }
         }
         
@@ -555,7 +588,7 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
         var P_dt = numeric.diag([s_dt_pos, s_dt_pos, s_dt_pos, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_angle, s_dt_focus,
         s_dt_rot,s_dt_rot,s_dt_rot]);
         //観測誤差
-        var error_pixel = 0.01;
+        var error_pixel = 0.001;
         var error_pos = 10000.0;
         var error_angle = 0.2;
         var error_rot = 0.001;
@@ -568,8 +601,26 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
         var n_motion = 0;//足し合わせてあった数
         function motionEventHandler(event) {
             var motion = [event.rotationRate.alpha, event.rotationRate.beta, event.rotationRate.gamma];
+            var sc_ori = screen.orientation.angle;//角速度は画面の向きが縦向きか横向きかにかかわらず表示されるのでそれの補正を行う
+            //カメラ座標の向き+I,J,Kと角速度の軸+X,Y,Zの対応
+            var newmotion = null;
+            //console.log(sc_ori);
+            if (sc_ori == 0) {
+                //+I=+X, +J=+Y
+                newmotion = [motion[0], motion[1], motion[2]];
+            } else if (sc_ori == 90) {
+                //+J=+X,-I=+Y
+                newmotion = [-motion[1], motion[0], motion[2]];
+            } else if (sc_ori == 180) {
+                //+I=-X, +J=-Y
+                newmotion = [-motion[0], -motion[1], motion[2]];
+            } else if (sc_ori == 270) {
+                newmotion = [motion[1], -motion[0], motion[2]];
+            }
+            motion = newmotion;
             latest_motion = numeric.add(latest_motion, motion);
             n_motion += 1;
+            //console.log(motion)
         }
         window.addEventListener('devicemotion', motionEventHandler);
 
@@ -643,16 +694,7 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
                     H = H.concat(ret.H);
                     Z = Z.concat(ret.Z);
                     ZE = ZE.concat(ret.ZE);
-
-                    if (Math.min(P[0][0], P[1][1], P[2][2]) < corner_threshold && use_corner) {
-                        //精度がとれているときだけコーナーを用いる
-                        R = R.concat([error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pixel, error_pos, error_pos, error_pos,
-                            error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle
-                        ])
-                    } else {
-                        R = R.concat([error_pos, error_pos, error_pos,
-                            error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle, error_angle])
-                    }
+                    R = R.concat(ret.R);
                 }
 
                 markers = [];
