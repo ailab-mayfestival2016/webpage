@@ -6,6 +6,7 @@ define([], function () {
     UTILS.BLOCK_SCALE_FACTOR = 0.5;
     UTILS.BLOCK_Z = 100.0;
     UTILS.CENTER = [0.0, 100.0, 100.0];
+    UTILS.DEFAULT_TRANSPARENCY = 0.7;
 
     UTILS.LOWRES_TEXTURES = {
         block_normals: 'resources/textures/block_normals.png',

@@ -2,30 +2,39 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
     //音声
     var scene = new arcanoid_scene();
 
-    var map = [];
-    for (var i = 0; i < 16; i++) {
-        map.push({
-            x: (i % 4)* 50 - 100,
-            y: 200 + (Math.floor(i / 4))* 50,
-            color: UTILS.PCB_COLORS[UTILS.randi(0, UTILS.PCB_COLORS.length)]
-        })
-    }
     //scene.init_controls();
     scene.default_renderer = scene.effect;
     scene.init_environment_default();
     scene.set_environment("ar");
-    scene.init_blocks(map);
+    scene.init_materials(true);
     scene.load_geometry();
     scene.create_particle_system();
     scene.animate();
+    console.log(scene.element);
+    scene.element.addEventListener('click', scene.fullscreen.bind(scene), false);
 
-    var geometry = new THREE.PlaneGeometry(100, 100, 10, 10);
+    var geometry = new THREE.PlaneGeometry(200, 500, 10, 10);
     var material = new THREE.MeshBasicMaterial({
         wireframe: true,
         color: 0xffffff
     })
     groundPlane = new THREE.Mesh(geometry, material);
+    groundPlane.position.y = 250
     scene.scene.add(groundPlane);
+
+    var geometry = new THREE.BoxGeometry(60, 1000, 10);
+    var material = new THREE.MeshBasicMaterial({
+        color: 0xff0000,
+        transparent: true,
+        opacity: 0.6
+    });
+    bar_mesh = new THREE.Mesh(geometry, material);
+    bar_mesh.position.x = 0.0;
+    bar_mesh.position.y = 40.0;
+    bar_mesh.position.z = 100.0;
+    scene.scene.add(bar_mesh);
+    var bar_pos = [0.0, 100.0, 0.0]
+
 
 
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -70,6 +79,16 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         // 読み込み完了後にボタンにクリックイベントを登録
         audio_bound = buffer;
     });
+    var audio_hit = null;
+    getAudioBuffer('/sound/hit.mp3', function (buffer) {
+        // 読み込み完了後にボタンにクリックイベントを登録
+        audio_hit = buffer;
+    });
+    var audio_explosion = null;
+    getAudioBuffer('/sound/explosion.mp3', function (buffer) {
+        // 読み込み完了後にボタンにクリックイベントを登録
+        audio_explosion = buffer;
+    });
     var audio_complete = null;
     getAudioBuffer('/sound/complete.mp3', function (buffer) {
         // 読み込み完了後にボタンにクリックイベントを登録
@@ -80,7 +99,7 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
     //phenox
     var phenox_pos = [0.0, 0.0, 100.0]
     //地図
-    var block_map = []
+    var block_map = {};
 
     //通信部分
     var isConnected = false;
@@ -91,16 +110,30 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         phenox_pos[1] = data[1] + 200.0;
     }
     function event_bar_position(data) {
+        console.log("bar ->", data);
+        bar_pos[0] = data;
+    }
 
+    function event_game_init(data) {
+        $(".background_div").show();
+    }
+    function event_gameplay_start(data) {
+        $(".background_div").addClass("fade");
+        setTimeout(function() {
+            console.log("hide")
+            $(".background_div").hide();
+            $(".background_div").removeClass("fade");
+        }, 2000);
     }
     function event_reflect(data) {
         console.log("reflect")
-        playSound(audio_bound);
+        playSound(audio_hit);
 
     }
     function event_hit(data) {
-        deleteBlock(data);
-        console.log("hit")
+        scene.kill_block(data);
+        playSound(audio_explosion);
+        console.log("hit", data);
     }
     function event_complete(data) {
         console.log("complete")
@@ -113,23 +146,25 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         console.log("time up")
     }
     function event_map(data) {
-        console.log("get map")
-        for (key in block_mesh) {
+        console.log("get map", data);
+        /*for (key in block_mesh) {
             deleteBlock(key);
-        }
-        block_map = []
+        }*/
+        block_map = {}
         for (key in data) {
             var block = data[key];
             var block = {
                 id: key,
                 x: block[0],
                 y: block[1] + 200,
-                xL: block[2],
-                yL: block[3]
+                x_scale: block[2],
+                y_scale: block[3],
+                color: [block[4][0]/255.0, block[4][1]/255.0, block[4][2]/255.0]
             }
-            block_map.push(block);
-            addBlock(block);
+            block_map[key] = block;
+            //addBlock(block);
         }
+        scene.set_blocks(block_map)
     }
     //
     function connect() {
@@ -177,16 +212,45 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         { "id": 10, "pos": [-150.0, 232.0, 92.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 85.0 },
         { "id": 100, "pos": [-150.0, 382.0, 97.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 85.0 },
         { "id": 150, "pos": [-72.0, 505.0, 87.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 },
-        { "id": 90, "pos": [72.0, 460.0, 82.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 }
+        { "id": 90, "pos": [72.0, 460.0, 82.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 },
+        { "id": 70, "pos": [0.0, 71, 0.0], "mat": [[0.0, 1.0, 0.0], [-1.0, 0.0, 0.0], [0.0, 0.0, 1.0]], "size": 57.0 },
     ];
 
     //内部でdictを更新し続ける位置推定ルーチンを動かす
     POSITEST.runPositestKalman(map, dict, {stereo: true});
 
+    function test(){
+        var mapp = {};
+        for (var i = 0; i < 16; i++) {
+            mapp[i] = [
+                (i % 4)* 70 - 100,
+                200 + (Math.floor(i / 4))* 70,
+                50,
+                50,
+                [255, 0, 0],//UTILS.PCB_COLORS[UTILS.randi(0, UTILS.PCB_COLORS.length)]
+            ];
+        }
+        setTimeout(event_game_init, 5000);
+        setTimeout(event_gameplay_start, 7000);
+        //setTimeout(event_game_init, 55000);
+        event_map(mapp);
+        var kkk = 0;
+        //setInterval(function() {event_hit(kkk++)}, 2000);
+    };
+    //test();
+
     var rotx = 0.0;
     var roty = 0.0;
     var rotz = 0.0;
     var render = function () {
+        /*phenox_mesh.position.x = phenox_pos[0];
+        phenox_mesh.position.y = phenox_pos[1];
+        phenox_mesh.position.z = phenox_pos[2];*/
+
+        bar_mesh.position.x = bar_pos[0];
+        bar_mesh.position.y = bar_pos[1] - 135;
+        bar_mesh.position.z = bar_pos[2];
+
         f = dict["f"];
         var fovW = Math.atan2(0.5, f) * 2 * 180 / 3.1415;//canvas横の視野角
         if (dict["video"] != null) {
@@ -213,5 +277,4 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
     }
 
     setInterval(render, 20);
-
 });

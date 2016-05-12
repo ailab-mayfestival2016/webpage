@@ -37,17 +37,19 @@ THREEx.WebcamGrabbing = function(stereo){
     if (stereo) {
         domElement_l.setAttribute('autoplay', true);
         domElement_l.style.zIndex = -1;
-        domElement_l.style.width = 'auto';
+        domElement_l.style.top = '0px';
+        domElement_l.style.width = '100%';
         domElement_l.style.height = '100%';
-        domElement_l.style.left = '-50%';
-        domElement_l.style.position = 'absolute';
+//        domElement_l.style.left = '-50%';
+        domElement_l.style.position = 'relative';
 
         domElement_r.setAttribute('autoplay', true);
         domElement_r.style.zIndex = -1;
-        domElement_r.style.width = 'auto';
+        domElement_r.style.top = '0px';
+        domElement_r.style.width = '100%';
         domElement_r.style.height = '100%';
-        domElement_r.style.left = '-50%';
-        domElement_r.style.position = 'absolute';
+//        domElement_r.style.left = '-50%';
+        domElement_r.style.position = 'relative';
     }   
         /**
          * Resize video element.
@@ -131,8 +133,8 @@ THREEx.WebcamGrabbing = function(stereo){
     if (stereo) {
         this.domElement_l = domElement_l;
         this.domElement_r = domElement_r;
-        document.getElementById("left").appendChild(domElement_l);
-        document.getElementById("right").appendChild(domElement_r);
+        document.getElementById("left").insertBefore(domElement_l, document.getElementById("left").childNodes[0]);
+        document.getElementById("right").insertBefore(domElement_r, document.getElementById("right").childNodes[0]);
     }
 
 }
