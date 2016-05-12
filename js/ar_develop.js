@@ -47,6 +47,16 @@ define(['io','three.js/build/three', 'three.js/examples/js/libs/stats.min', 'num
         // 読み込み完了後にボタンにクリックイベントを登録
         audio_complete = buffer;
     });
+    var audio_gameover = null;
+    getAudioBuffer('/sound/gameover.mp3', function (buffer) {
+        // 読み込み完了後にボタンにクリックイベントを登録
+        audio_gameover = buffer;
+    });
+    var audio_hit = null;
+    getAudioBuffer('/sound/hit.mp3', function (buffer) {
+        // 読み込み完了後にボタンにクリックイベントを登録
+        audio_hit = buffer;
+    });
 
 
     //phenox
@@ -60,19 +70,19 @@ define(['io','three.js/build/three', 'three.js/examples/js/libs/stats.min', 'num
     //イベントハンドラ
     function event_px_position(data) {
         phenox_pos[0] = data[0];
-        phenox_pos[1] = data[1]+200.0;
+        phenox_pos[1] = data[1];
     }
     function event_bar_position(data) {
 
     }
     function event_reflect(data) {
         console.log("reflect")
-        playSound(audio_bound);
-        
+        playSound(audio_bound); 
     }
     function event_hit(data) {
         deleteBlock(data);
-        console.log("hit")
+        playSound(audio_hit);
+        console.log("hit");
     }
     function event_complete(data) {
         console.log("complete")
@@ -80,9 +90,11 @@ define(['io','three.js/build/three', 'three.js/examples/js/libs/stats.min', 'num
     }
     function event_gameover(data) {
         console.log("game over")
+        playSound(audio_gameover);
     }
     function event_timeup(data) {
         console.log("time up")
+        playSound(audio_gameover);
     }
     function event_map(data) {
         console.log("get map")
@@ -175,83 +187,6 @@ define(['io','three.js/build/three', 'three.js/examples/js/libs/stats.min', 'num
 
     //オブジェクトの作成
 
-    /*
-    for (var i = -1; i < 2; i++) {
-        for (var j = -1; j < 2; j++) {
-            var geometry = new THREE.BoxGeometry(50, 50, 50);
-            var material = new THREE.MeshNormalMaterial(
-                {
-                    wireframe: true,
-                    color:'#ffffff'
-                });
-            var cube = new THREE.Mesh(geometry, material);
-            cube.position.x = i * 100.0;
-            cube.position.y = 300.0 + j * 100.0;
-            cube.position.z = 100.0;
-            scene.add(cube);
-        }
-    }
-
-    //
-    var geometry = new THREE.PlaneGeometry(85, 85, 10, 10)
-    var material = new THREE.MeshBasicMaterial({
-        wireframe: true
-    })
-    var mesh = new THREE.Mesh(geometry, material);
-    mesh.position.x = -130.0;
-    mesh.position.y = 497.0;
-    mesh.position.z = 155.0;
-    mesh.rotation.x = 3.1415 / 2.0;
-    scene.add(mesh);
-
-    var mesh = new THREE.AxisHelper
-    scene.add(mesh);*/
-    
-    //壁
-    var geometry = new THREE.PlaneGeometry(350, 4000, 10, 10)
-    var material = new THREE.MeshBasicMaterial({
-        wireframe: true
-    })
-    var mesh = new THREE.Mesh(geometry, material);
-    mesh.position.x = 175;
-    mesh.position.y = 200;
-    mesh.position.z = 0;
-    mesh.rotation.x = 3.1415 / 2.0;
-    scene.add(mesh);
-    //
-    var geometry = new THREE.PlaneGeometry(350, 4000, 10, 10)
-    var material = new THREE.MeshBasicMaterial({
-        wireframe:true
-    })
-    var mesh = new THREE.Mesh(geometry, material);
-    mesh.position.x = 175;
-    mesh.position.y = 450;
-    mesh.position.z = 0;
-    mesh.rotation.x = 3.1415 / 2.0;
-    scene.add(mesh);
-    //
-    var geometry = new THREE.PlaneGeometry(4000, 250, 10, 10)
-    var material = new THREE.MeshBasicMaterial({
-        wireframe: true
-    })
-    var mesh = new THREE.Mesh(geometry, material);
-    mesh.position.x = 0;
-    mesh.position.y = 325;
-    mesh.position.z = 0;
-    mesh.rotation.y = 3.1415 / 2.0;
-    scene.add(mesh);
-    //
-    var geometry = new THREE.PlaneGeometry(4000, 250, 10, 10)
-    var material = new THREE.MeshBasicMaterial({
-        wireframe: true
-    })
-    var mesh = new THREE.Mesh(geometry, material);
-    mesh.position.x = 350;
-    mesh.position.y = 325;
-    mesh.position.z = 0;
-    mesh.rotation.y = 3.1415 / 2.0;
-    scene.add(mesh);
-
     var mesh = new THREE.AxisHelper
     scene.add(mesh);
 
@@ -259,19 +194,18 @@ define(['io','three.js/build/three', 'three.js/examples/js/libs/stats.min', 'num
     var block_mother = new THREE.Object3D();
     scene.add(block_mother);
     function addBlock(block) {
-        var geometry = new THREE.BoxGeometry(block.xL, block.xY,100);
+        var geometry = new THREE.BoxGeometry(block["xL"], block["yL"],100);
         var material = new THREE.MeshNormalMaterial();
         var cube = new THREE.Mesh(geometry, material);
-        cube.position.x = block.x;
-        cube.position.y = block.y;
+        cube.position.x = block["x"];
+        cube.position.y = block["y"];
         cube.position.z = 100.0;
-        console.log("add",block.id,block.xL,block.yL,block.x,block.y)
         block_mother.add(cube);
-        block_mesh[block.id] = cube;
+        block_mesh[block["id"]] = cube;
     }
     function deleteBlock(id) {
         console.log("delte",id)
-        disposeHierarchy(block_mesh[id], function (child) {
+        POSITEST.disposeHierarchy(block_mesh[id], function (child) {
             child.parent.remove(child);
         })
         block_mother.remove(block_mesh[id]);
@@ -286,12 +220,10 @@ define(['io','three.js/build/three', 'three.js/examples/js/libs/stats.min', 'num
 
     //内部でdictを更新し続ける位置推定ルーチンを動かす
     var map = [
-        { "id": 10, "pos": [150.0, 455.0, 140.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 },
-        { "id": 100, "pos": [-130.0, 497.0, 155.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 },
-        { "id": 90, "pos": [-192.0, 397.0, 168.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 85.0 },
-        { "id": 150, "pos": [-192.0, 281.0, 205.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 85.0 },
-        { "id": 70, "pos": [-47.0, 505.0, 65.0], "mat": [[0.0, 0.0, -1.0], [1.0, 0.0, 0.0], [0.0, -1.0, 0.0]], "size": 57.0 },
-        { "id": 30, "pos": [26.0, 492.0, 190.0], "mat": [[-1.0, 0.0, 0.0], [0.0, 0.0, -1.0], [0.0, -1.0, 0.0]], "size":57.0 }
+        { "id": 10, "pos": [-150.0, 232.0, 92.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 85.0 },
+        { "id": 100, "pos": [-150.0, 382.0, 97.0], "mat": [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], "size": 85.0 },
+        { "id": 150, "pos": [-72.0, 505.0, 87.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 },
+        { "id": 90, "pos": [72.0, 460.0, 82.0], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 }
     ]
 
     POSITEST.runPositestKalman(map, dict);

@@ -108,23 +108,18 @@ THREEx.JsArucoMarker = function(){
 	this.getMarkerPosition = function(marker){
 		// convert corners coordinate - not sure why
 		// 画面中央を0,0とし、左、上方向がそれぞれ+x,+yの座標
-		// cornersの最初の要素はマーカーの左上の頂点位置
-		//console.log("getMarkerPosition");
+	    // cornersの最初の要素はマーカーの左上の頂点位置
 	    var corners = []//marker.corners;
-        //console.log("1",Date.now())
 		for (var i = 0; i < marker.corners.length; ++ i){
 			corners.push({
 				x : marker.corners[i].x - (canvasElement.width / 2),
 				y : (canvasElement.height / 2) - marker.corners[i].y,
 			})
 		}
-		//console.log("2", Date.now())
 	    // compute the pose from the canvas
         var posit = new POS.Posit(this.modelSize, canvasElement.width * this.focus);
-        //console.log("3", Date.now())
         var pose = posit.pose(corners);
-        //console.log("4", Date.now())
-		console.assert(pose !== null)
+		//console.assert(pose !== null)
 		if (pose === null) return null;
 
 		normal_corners = []
