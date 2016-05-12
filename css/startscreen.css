@@ -351,13 +351,13 @@ h1 sub
 
   	animation:fadein 2s;
   	animation-timing-function:linear;
-  	animation-delay:28.5s;
+  	animation-delay: 28.5s;
   	animation-fill-mode:forwards;
   	animation-iteration-count: 1;
   	-webkit-animation-iteration-count: 1;
   	-webkit-animation:fadein 2s;
   	-webkit-animation-timing-function:linear;
-  	-webkit-animation-delay:28.5s;
+  	-webkit-animation-delay: 28.5s;
   	-webkit-animation-fill-mode: forwards;
 }
 .instructions-set p {
