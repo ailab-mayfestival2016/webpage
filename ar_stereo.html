@@ -17,7 +17,8 @@
     <!-- Bootstrap Core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/startscreen.css" rel="stylesheet">
-    <script data-main="js/common.js" src="js/require.js"></script>
+    <!--script data-main="js/common.js" src="js/require.js"></script-->
+    <script src="js/require.js"></script>
 
     <!-- Custom CSS -->
     <style>
@@ -49,7 +50,7 @@
             height: 100%;
             overflow: hidden;
             text-align: center;
-            z-index: -1;
+            z-index: -2;
         }
         #right {
             position: absolute;
@@ -58,7 +59,7 @@
             width: 50%;
             height: 100%;
             overflow: hidden;
-            z-index: -1;
+            z-index: -2;
         }
     </style>
 
@@ -172,6 +173,11 @@
     <!-- Bootstrap Core JavaScript -->
     <script src="js/bootstrap.min.js"></script>
     <script>
+            requirejs.config({
+                //By default load any module IDs from js/lib
+                waitSeconds: 0,
+                baseUrl: 'js/build',
+            });
             requirejs(['ar_stereo'], function () {
             });
     </script>

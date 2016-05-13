@@ -65,9 +65,11 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
 
 
     arcanoid_scene.prototype.init = function(texture_set) {
+        this.precision = "highp";
         this.texture_set = texture_set;
         if (!this.texture_set) {
             this.texture_set = UTILS.LOWRES_TEXTURES;
+            this.precision = "mediump";
         }
         console.log(texture_set)
         this.clock = new THREE.Clock();
@@ -226,7 +228,7 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
           gl_Position = projectionMatrix * mvPosition;\
         }";
         var fragShader =
-            "precision highp float;\
+            "precision " + this.precision + " float;\
          \
         varying vec2 vUv;\
         uniform float time;\
@@ -601,6 +603,8 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
     arcanoid_scene.prototype.animate = function(t) {
         var dt = this.clock.getDelta();
         requestAnimationFrame(this.animate.bind(this));
+        if (this.stop_draw)
+            return;
         for (var i in this.blocks) {
             this.blocks[i].animate(this.clock.elapsedTime);
         }
