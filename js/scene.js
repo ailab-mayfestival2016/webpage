@@ -17,7 +17,7 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         }
         scene.init_environment_default();
         scene.set_environment(environment);
-        scene.init_materials(!(opts && !opts.opaque));
+        scene.init_materials(!(opts && opts.opaque));
         scene.load_geometry();
         scene.create_particle_system();
         scene.animate();
@@ -26,7 +26,7 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         SCENE.scene = scene;
 
         var material = new THREE.LineBasicMaterial({
-            color: 0x0f0fff,
+            color: 0x9f9fff,
             linewidth: 10,
             transparent: true,
             opacity: 0.9,
@@ -54,7 +54,7 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         scene.add_update_callback(function(dt) {
             for (var i = 0; i < lines.length; i++) {
                 for (var j = 0; j < lines[i].geometry.vertices.length; j++) {
-                    lines[i].geometry.vertices[j].z = Math.random()*40 - 20;
+                    lines[i].geometry.vertices[j].z = Math.sin((scene.clock.elapsedTime*100 + lines[i].geometry.vertices[j].x + lines[i].geometry.vertices[j].y)/100.0)*(Math.random()*40 - 20);
                 }
                 lines[i].geometry.verticesNeedUpdate = true;
             }
@@ -99,6 +99,11 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         getAudioBuffer('./sound/hit.mp3', function (buffer) {
             // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
             SCENE.audio_hit = buffer;
+        });
+        SCENE.audio_radio = null;
+        getAudioBuffer('./sound/radio-wave.mp3', function (buffer) {
+            // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
+            SCENE.audio_radio = buffer;
         });
         SCENE.audio_explosion = null;
         getAudioBuffer('./sound/explosion.mp3', function (buffer) {
@@ -197,7 +202,7 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
     }
     function event_reflect(data) {
         console.log("reflect")
-        playSound(SCENE.audio_bound);
+        playSound(SCENE.audio_radio);
 
     }
     function event_hit(data) {
