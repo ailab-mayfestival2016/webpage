@@ -628,6 +628,17 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
         window.addEventListener('devicemotion', motionEventHandler);
 
         var timerID = setInterval(function () {
+            var debug_mode = opts.debug;
+            if (!(debug_mode) && debug_mode) {
+                estimater.ifdebug = true;
+            } else {
+                estimater.ifdebug = false;
+            }
+
+            if (!(dict["run"])) {
+                return;
+            }
+
             var markers = estimater.observeMarkers(domElement);
 
             var H = [];//ŠÏ‘ªs—ñ
