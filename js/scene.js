@@ -176,8 +176,8 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
     function event_px_position(data) {
         console.log(data);
         SCENE.phenox_pos[0] = data[0];
-        SCENE.phenox_pos[1] = data[1] + 160.0;
-        if (data.length == 3) {
+        SCENE.phenox_pos[1] = data[1];
+        if (data.length == 3 && SCENE.phenox_pos[2] != 0) {
             SCENE.phenox_pos[2] = data[2];
         }
     }
@@ -231,7 +231,7 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
             var block = {
                 id: key,
                 x: block[0],
-                y: block[1] + 160,
+                y: block[1],
                 x_scale: block[2],
                 y_scale: block[3],
                 color: [block[4][0]/255.0, block[4][1]/255.0, block[4][2]/255.0]
