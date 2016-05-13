@@ -384,6 +384,8 @@ h1 sub
 	font-size: 200%;
 	position: absolute;
 	text-align: center;
+	width: 100%;
+	font-weight: normal
 }
 @media screen and (max-device-width: 1000px) {
 .instructions-set p {
@@ -411,15 +413,15 @@ h1 sub
 .instructions-set div:nth-child(3) { animation-delay: 6s; }
 
 .instructions.instructionsidle {
-    background-image: url("/images/instructions-idle.png");
+    background-image: url("../images/instructions-idle.png");
 }
 
 .instructions.instructionsleft {
-    background-image: url("/images/instructions-left.png");
+    background-image: url("../images/instructions-left.png");
 }
 
 .instructions.instructionsright {
-    background-image: url("/images/instructions-right.png");
+    background-image: url("../images/instructions-right.png");
 }
 
 /* animation */
