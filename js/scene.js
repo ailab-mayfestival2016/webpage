@@ -9,7 +9,7 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         }
         var scene = new arcanoid_scene(texture_set);
 
-        var fence = [[120, 0, 0], [120, 400, 0], [-120, 400, 0], [-120, 0, 0]];
+        var fence = [[95, 0, 0], [95, 400, 0], [-140, 400, 0], [-140, 0, 0]];
 
         //scene.init_controls();
         if (stereo) {
