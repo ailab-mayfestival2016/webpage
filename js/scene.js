@@ -53,22 +53,22 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         window.AudioContext = window.AudioContext || window.webkitAudioContext;
         SCENE.context = new AudioContext();
         SCENE.audio_bound = null;
-        getAudioBuffer('/sound/bound.mp3', function (buffer) {
+        getAudioBuffer('./sound/bound.mp3', function (buffer) {
             // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
             SCENE.audio_bound = buffer;
         });
         SCENE.audio_hit = null;
-        getAudioBuffer('/sound/hit.mp3', function (buffer) {
+        getAudioBuffer('./sound/hit.mp3', function (buffer) {
             // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
             SCENE.audio_hit = buffer;
         });
         SCENE.audio_explosion = null;
-        getAudioBuffer('/sound/explosion.mp3', function (buffer) {
+        getAudioBuffer('./sound/explosion.mp3', function (buffer) {
             // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
             SCENE.audio_explosion = buffer;
         });
         SCENE.audio_complete = null;
-        getAudioBuffer('/sound/complete.mp3', function (buffer) {
+        getAudioBuffer('./sound/complete.mp3', function (buffer) {
             // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
             SCENE.audio_complete = buffer;
         });
@@ -123,7 +123,7 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         // buffer ‚ðƒZƒbƒg
         source.buffer = buffer;
         // context ‚É connect
-        source.connect(context.destination);
+        source.connect(SCENE.context.destination);
         // Ä¶
         source.start(0);
     };
@@ -131,8 +131,12 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
 
     //ƒCƒxƒ“ƒgƒnƒ“ƒhƒ‰
     function event_px_position(data) {
+        console.log(data);
         SCENE.phenox_pos[0] = data[0];
-        SCENE.phenox_pos[1] = data[1] + 200.0;
+        SCENE.phenox_pos[1] = data[1] + 160.0;
+        if (data.length == 3) {
+            SCENE.phenox_pos[2] = data[2];
+        }
     }
     function event_bar_position(data) {
         console.log("bar ->", data);
@@ -155,7 +159,7 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
     }
     function event_reflect(data) {
         console.log("reflect")
-        playSound(SCENE.audio_hit);
+        playSound(SCENE.audio_bound);
 
     }
     function event_hit(data) {
@@ -184,7 +188,7 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
             var block = {
                 id: key,
                 x: block[0],
-                y: block[1] + 200,
+                y: block[1] + 160,
                 x_scale: block[2],
                 y_scale: block[3],
                 color: [block[4][0]/255.0, block[4][1]/255.0, block[4][2]/255.0]

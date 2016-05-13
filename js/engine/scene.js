@@ -547,14 +547,16 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
             this.dead_blocks.push(block);
             delete this.blocks[i];
             setTimeout(function() {
-                disposeHierarchy(this.dead_blocks[index].block_mesh, function (child) {
-                    child.parent.remove(child);
-                })
-                disposeHierarchy(this.dead_blocks[index].circuit_mesh, function (child) {
-                    child.parent.remove(child);
-                })
-                this.block_holder.remove(this.dead_blocks[index].block_mesh);
-                this.block_holder.remove(this.dead_blocks[index].circuit_mesh);
+                if (this.dead_blocks[index]) {
+                    disposeHierarchy(this.dead_blocks[index].block_mesh, function (child) {
+                        child.parent.remove(child);
+                    })
+                    disposeHierarchy(this.dead_blocks[index].circuit_mesh, function (child) {
+                        child.parent.remove(child);
+                    })
+                    this.block_holder.remove(this.dead_blocks[index].block_mesh);
+                    this.block_holder.remove(this.dead_blocks[index].circuit_mesh);
+                }
 
                 //disposeNode(this.dead_blocks[index].block_mesh);
                 //disposeNode(this.dead_blocks[index].circuit_mesh);
