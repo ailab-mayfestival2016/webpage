@@ -186,6 +186,9 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
 
     // ƒTƒEƒ“ƒh‚ðÄ¶
     var playSound = function (buffer, loop) {
+        if (!SCENE.context) {
+            return;
+        }
         // source ‚ðì¬
         source = SCENE.context.createBufferSource();
         // buffer ‚ðƒZƒbƒg
