@@ -1,5 +1,5 @@
 define(['scene', 'engine/utils'], function (SCENE, UTILS) {
-    SCENE.init("", false, {hires: true, opaque: true, hide_debug: true});
+    SCENE.init("", false, {hires: true, opaque: true, hide_debug: true, sound_enabled: true});
     SCENE.scene.camera.position.set(-100, 50, 300);
     SCENE.scene.controls = new THREE.OrbitControls(SCENE.scene.camera, SCENE.scene.element);
     SCENE.scene.controls.rotateUp(Math.PI / 4);
