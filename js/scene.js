@@ -186,6 +186,9 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
 
     // ƒTƒEƒ“ƒh‚ðÄ¶
     var playSound = function (buffer, loop) {
+        if (!SCENE.context) {
+            return;
+        }
         // source ‚ðì¬
         source = SCENE.context.createBufferSource();
         // buffer ‚ðƒZƒbƒg
@@ -243,7 +246,6 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         $(SCENE.scene.element).show();
     }
     function event_opening(data) {
-        console.log(opening);
         $(".background_div").show();
         SCENE.dict["run"] = false;
         SCENE.scene.stop_draw = true;
