@@ -283,7 +283,7 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
 define(['scene'], function (SCENE) {
     SCENE.init("ar", true);
     SCENE.connect();
-    SCENE.test();
+    //SCENE.test();
     SCENE.start(true);
 >>>>>>> upstream/master
 });

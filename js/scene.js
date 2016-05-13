@@ -8,6 +8,8 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         }
         var scene = new arcanoid_scene(texture_set);
 
+        var fence = [[120, 0, 0], [120, 400, 0], [-120, 400, 0], [-120, 0, 0]];
+
         //scene.init_controls();
         if (stereo) {
             SCENE.stereo = stereo;
@@ -15,13 +17,49 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         }
         scene.init_environment_default();
         scene.set_environment(environment);
-        scene.init_materials(!opts && opts.opague);
+        scene.init_materials(!(opts && !opts.opaque));
         scene.load_geometry();
         scene.create_particle_system();
         scene.animate();
         document.getElementById("example").addEventListener('click', scene.fullscreen.bind(scene), false);
 
         SCENE.scene = scene;
+
+        var material = new THREE.LineBasicMaterial({
+            color: 0x0f0fff,
+            linewidth: 10,
+            transparent: true,
+            opacity: 0.9,
+            blending: THREE.AdditiveBlending
+        });
+
+        var geometry = new THREE.Geometry();
+        for (var i = 0; i < fence.length - 1; i++) {
+            var l = [fence[i+1][0] - fence[i][0], fence[i+1][1] - fence[i][1], fence[i+1][2] - fence[i][2]];
+            var length = Math.sqrt(l[0]*l[0] + l[1]*l[1] + l[2]*l[2]);
+            for (var k = 0; k <= length; k+=40.0) {
+                var inc = k/length;
+                geometry.vertices.push(
+                    new THREE.Vector3( fence[i][0] + l[0]*(inc + Math.random()/50.0 - 0.01), fence[i][1] + l[1]*(inc + Math.random()/50.0 - 0.01), fence[i][2] + l[2]*inc)
+                );
+            }
+        }
+        var lines_count = 10;
+        var lines = [];
+        for (var i = 0; i < lines_count; i++) {
+            lines.push(new THREE.Line( geometry.clone(), material ));
+            scene.scene.add( lines[i] );
+        }
+
+        scene.add_update_callback(function(dt) {
+            for (var i = 0; i < lines.length; i++) {
+                for (var j = 0; j < lines[i].geometry.vertices.length; j++) {
+                    lines[i].geometry.vertices[j].z = Math.random()*40 - 20;
+                }
+                lines[i].geometry.verticesNeedUpdate = true;
+            }
+            console.log(10);
+        });
 
         var geometry = new THREE.PlaneGeometry(200, 500, 10, 10);
         var material = new THREE.MeshBasicMaterial({

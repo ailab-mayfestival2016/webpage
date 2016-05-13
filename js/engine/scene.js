@@ -57,6 +57,7 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
     var arcanoid_scene = function(texture_set) {
         this.blocks = {};
         this.dead_blocks = [];
+        this.update_callbacks = [];
         this.init(texture_set); 
         window.addEventListener('resize', this.resize.bind(this), false);
         setTimeout(this.resize.bind(this), 1);
@@ -72,6 +73,7 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
         this.clock = new THREE.Clock();
         this.renderer = new THREE.WebGLRenderer({ alpha: true });
         this.renderer.setPixelRatio(window.devicePixelRatio ? window.devicePixelRatio : 1);
+        this.renderer.autoClear = false;
         console.log(window.devicePixelRatio);
         this.default_renderer = this.renderer;
 
@@ -128,8 +130,8 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
     arcanoid_scene.prototype.set_render_callback = function(callback) {
         this.render_callback = callback;
     }
-    arcanoid_scene.prototype.set_update_callback = function(callback) {
-        this.update_callback = callback;
+    arcanoid_scene.prototype.add_update_callback = function(callback) {
+        this.update_callbacks.push(callback);
     }
 
     arcanoid_scene.prototype.init_controls = function() {
@@ -578,8 +580,8 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
 
         this.group.tick(dt);
         this.explosion_group.tick(dt);
-        if (this.update_callback) {
-            this.update_callback(dt);
+        for (var i = 0; i < this.update_callbacks.length; i++) {
+            this.update_callbacks[i](dt);
         }
         /*if (this.particle_system.isActive) {
             this.particle_system.update(dt);
@@ -587,6 +589,9 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
     }
 
     arcanoid_scene.prototype.render = function(dt) {
+        if (this.default_renderer != this.effect) {
+            this.renderer.clear();
+        }
         this.default_renderer.render(this.scene, this.camera);
         if (this.render_callback) {
             this.render_callback(dt);
