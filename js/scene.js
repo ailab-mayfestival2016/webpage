@@ -53,22 +53,22 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         window.AudioContext = window.AudioContext || window.webkitAudioContext;
         SCENE.context = new AudioContext();
         SCENE.audio_bound = null;
-        getAudioBuffer('/sound/bound.mp3', function (buffer) {
+        getAudioBuffer('./sound/bound.mp3', function (buffer) {
             // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
             SCENE.audio_bound = buffer;
         });
         SCENE.audio_hit = null;
-        getAudioBuffer('/sound/hit.mp3', function (buffer) {
+        getAudioBuffer('./sound/hit.mp3', function (buffer) {
             // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
             SCENE.audio_hit = buffer;
         });
         SCENE.audio_explosion = null;
-        getAudioBuffer('/sound/explosion.mp3', function (buffer) {
+        getAudioBuffer('./sound/explosion.mp3', function (buffer) {
             // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
             SCENE.audio_explosion = buffer;
         });
         SCENE.audio_complete = null;
-        getAudioBuffer('/sound/complete.mp3', function (buffer) {
+        getAudioBuffer('./sound/complete.mp3', function (buffer) {
             // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
             SCENE.audio_complete = buffer;
         });
