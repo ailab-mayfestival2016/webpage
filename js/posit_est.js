@@ -432,7 +432,7 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
         var imageGrabbing = new THREEx.WebcamGrabbing(opts && ('stereo' in opts) ? opts.stereo : false);
 
         //‰æ‘œ‚ð•\Ž¦
-        document.body.appendChild(imageGrabbing.domElement);
+        document.getElementById("example").insertBefore(imageGrabbing.domElement, document.getElementById("example").childNodes[0]);
 
         var domElement = imageGrabbing.domElement;
         dict["video"] = domElement;
