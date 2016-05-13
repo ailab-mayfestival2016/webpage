@@ -1,7 +1,7 @@
 
 
 
-define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js-aruco/svd', 'js-aruco/posit1-patched', 'js-aruco/cv', 'js-aruco/aruco', 'threex/webcamgrabbing', 'threex/imagegrabbing', 'threex/videograbbing', 'threex/jsarucomarker', 'numeric'], function (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12) {
+define(['three', 'TrackballControls', 'js-aruco/svd', 'js-aruco/posit1-patched', 'js-aruco/cv', 'js-aruco/aruco', 'threex/webcamgrabbing', 'threex/jsarucomarker', 'numeric'], function () {
     var POSITEST = {}
     if (!Array.prototype.fill) {
         Array.prototype.fill = function(x) {
@@ -153,10 +153,10 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
     //pos　マーカーの中心の位置の絶対座標
     //mat マーカーを上向きにおいたとき、右、手前、下をu,v,w軸と定義する　各列に順にu,v,wが納められた行列
     //size マーカーの絶対座標におけるサイズ
-    POSITEST.positionEstimater = function (mapdata) {
+    POSITEST.positionEstimater = function (mapdata, ifdebug) {
         var _this = this;
 
-        this.ifdebug = true;
+        this.ifdebug = ifdebug;
         this.last_observation = null;
         this.updated_flag = false;
         this.focus = 2.5;
@@ -443,7 +443,7 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
         var domElement = imageGrabbing.domElement;
         dict["video"] = domElement;
 
-        var estimater = new POSITEST.positionEstimater(map);
+        var estimater = new POSITEST.positionEstimater(map, opts && opts.debug);
 
         //カルマンフィルタの状態ベクトルは x,q,f,omegaの順
         //カルマンフィルタ関数群
@@ -634,16 +634,11 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
         window.addEventListener('devicemotion', motionEventHandler);
 
         var timerID = setInterval(function () {
-            var debug_mode = opts && opts.debug;
-            if (!(debug_mode) && debug_mode) {
-                estimater.ifdebug = true;
-            } else {
-                estimater.ifdebug = false;
-            }
 
             if (!(dict["run"])) {
                 return;
             }
+            console.log("Running")
 
             var markers = estimater.observeMarkers(domElement);
 

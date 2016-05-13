@@ -299,11 +299,11 @@ h1 sub
 	-ms-transform-origin: 50% 100%;
 	-o-transform-origin: 50% 100%;
 	transform-origin: 50% 100%;
-	-webkit-transform: perspective(300px) rotateX(25deg) rotateZ(-0.5deg);
-	-moz-transform: perspective(300px) rotateX(25deg) rotateZ(-0.5deg);
-	-ms-transform: perspective(300px) rotateX(25deg) rotateZ(-0.5deg);
-	-o-transform: perspective(300px) rotateX(25deg) rotateZ(-0.5deg);
-	transform: perspective(300px) rotateX(25deg) rotateZ(-0.5deg);
+	-webkit-transform: perspective(150px) rotateX(25deg) rotateZ(-0.5deg);
+	-moz-transform: perspective(150px) rotateX(25deg) rotateZ(-0.5deg);
+	-ms-transform: perspective(150px) rotateX(25deg) rotateZ(-0.5deg);
+	-o-transform: perspective(150px) rotateX(25deg) rotateZ(-0.5deg);
+	transform: perspective(150px) rotateX(25deg) rotateZ(-0.5deg);
 }
 
 #right #titles
@@ -313,11 +313,11 @@ h1 sub
 	-ms-transform-origin: 50% 100%;
 	-o-transform-origin: 50% 100%;
 	transform-origin: 50% 100%;
-	-webkit-transform: perspective(300px) rotateX(25deg) rotateZ(0.5deg);
-	-moz-transform: perspective(300px) rotateX(25deg) rotateZ(0.5deg);
-	-ms-transform: perspective(300px) rotateX(25deg) rotateZ(0.5deg);
-	-o-transform: perspective(300px) rotateX(25deg) rotateZ(0.5deg);
-	transform: perspective(300px) rotateX(25deg) rotateZ(0.5deg);
+	-webkit-transform: perspective(150px) rotateX(25deg) rotateZ(0.5deg);
+	-moz-transform: perspective(150px) rotateX(25deg) rotateZ(0.5deg);
+	-ms-transform: perspective(150px) rotateX(25deg) rotateZ(0.5deg);
+	-o-transform: perspective(150px) rotateX(25deg) rotateZ(0.5deg);
+	transform: perspective(150px) rotateX(25deg) rotateZ(0.5deg);
 }
 }
 

@@ -3,6 +3,7 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
     var SCENE = {dict: {}};
     SCENE.init = function(environment, stereo, opts) {
         var texture_set = null;
+        SCENE.opts = opts;
         if (opts && opts.hires) {
             texture_set = UTILS.HIRES_TEXTURES;
         }
@@ -33,43 +34,45 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
             blending: THREE.AdditiveBlending
         });
 
-        var geometry = new THREE.Geometry();
-        for (var i = 0; i < fence.length - 1; i++) {
-            var l = [fence[i+1][0] - fence[i][0], fence[i+1][1] - fence[i][1], fence[i+1][2] - fence[i][2]];
-            var length = Math.sqrt(l[0]*l[0] + l[1]*l[1] + l[2]*l[2]);
-            for (var k = 0; k <= length; k+=40.0) {
-                var inc = k/length;
-                geometry.vertices.push(
-                    new THREE.Vector3( fence[i][0] + l[0]*(inc + Math.random()/50.0 - 0.01), fence[i][1] + l[1]*(inc + Math.random()/50.0 - 0.01), fence[i][2] + l[2]*inc)
-                );
-            }
-        }
-        var lines_count = 10;
-        var lines = [];
-        for (var i = 0; i < lines_count; i++) {
-            lines.push(new THREE.Line( geometry.clone(), material ));
-            scene.scene.add( lines[i] );
-        }
-
-        scene.add_update_callback(function(dt) {
-            for (var i = 0; i < lines.length; i++) {
-                for (var j = 0; j < lines[i].geometry.vertices.length; j++) {
-                    lines[i].geometry.vertices[j].z = Math.sin(((i + scene.clock.elapsedTime)*10000 + lines[i].geometry.vertices[j].x + lines[i].geometry.vertices[j].y)/100.0)*(Math.random()*40 - 20);
+        if (opts && !opts.hide_lines) {
+            var geometry = new THREE.Geometry();
+            for (var i = 0; i < fence.length - 1; i++) {
+                var l = [fence[i+1][0] - fence[i][0], fence[i+1][1] - fence[i][1], fence[i+1][2] - fence[i][2]];
+                var length = Math.sqrt(l[0]*l[0] + l[1]*l[1] + l[2]*l[2]);
+                for (var k = 0; k <= length; k+=40.0) {
+                    var inc = k/length;
+                    geometry.vertices.push(
+                        new THREE.Vector3( fence[i][0] + l[0]*(inc + Math.random()/50.0 - 0.01), fence[i][1] + l[1]*(inc + Math.random()/50.0 - 0.01), fence[i][2] + l[2]*inc)
+                    );
                 }
-                lines[i].geometry.verticesNeedUpdate = true;
             }
-            //console.log(10);
-        });
+            var lines_count = 10;
+            var lines = [];
+            for (var i = 0; i < lines_count; i++) {
+                lines.push(new THREE.Line( geometry.clone(), material ));
+                scene.scene.add( lines[i] );
+            }
 
-        var geometry = new THREE.PlaneGeometry(200, 500, 10, 10);
-        var material = new THREE.MeshBasicMaterial({
-            wireframe: true,
-            color: 0xffffff
-        })
-        groundPlane = new THREE.Mesh(geometry, material);
-        groundPlane.position.y = 250
-        if (!opts || !opts.hide_debug) {
-            scene.scene.add(groundPlane);
+            scene.add_update_callback(function(dt) {
+                for (var i = 0; i < lines.length; i++) {
+                    for (var j = 0; j < lines[i].geometry.vertices.length; j++) {
+                        lines[i].geometry.vertices[j].z = Math.sin(((i + scene.clock.elapsedTime)*10000 + lines[i].geometry.vertices[j].x + lines[i].geometry.vertices[j].y)/100.0)*(Math.random()*40 - 20);
+                    }
+                    lines[i].geometry.verticesNeedUpdate = true;
+                }
+                //console.log(10);
+            });
+
+            var geometry = new THREE.PlaneGeometry(200, 500, 10, 10);
+            var material = new THREE.MeshBasicMaterial({
+                wireframe: true,
+                color: 0xffffff
+            })
+            groundPlane = new THREE.Mesh(geometry, material);
+            groundPlane.position.y = 250
+            if (!opts || !opts.hide_debug) {
+                scene.scene.add(groundPlane);
+            }
         }
 
         var geometry = new THREE.BoxGeometry(60, 400, 10);
@@ -192,19 +195,24 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
     }
 
     function event_abort(data) {
-        //$(".background_div").show();
+        $(".background_div").show();
         $(".background_div").hide();
         $(".background_div").removeClass("fade");
-
+        SCENE.scene.stop_draw = false;
+        $(SCENE.scene.element).show();
     }
     function event_opening(data) {
         $(".background_div").show();
         SCENE.dict["run"] = false;
+        SCENE.scene.stop_draw = true;
+        $(SCENE.scene.element).hide();
     }
     function event_game_start(data) {
         SCENE.dict["run"] = true;
+        SCENE.scene.stop_draw = false;
         $(".background_div").addClass("fade");
         setTimeout(function() {
+            $(SCENE.scene.element).show();
             console.log("hide")
             $(".background_div").hide();
             $(".background_div").removeClass("fade");
@@ -298,7 +306,7 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
             ];
         }
         setTimeout(event_opening, 5000);
-        setTimeout(event_game_start, 50000);
+        setTimeout(event_game_start, 15000);
         //setTimeout(event_game_init, 55000);
         event_map(mapp);
         var kkk = 0;
@@ -330,9 +338,9 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
             ]
 
             //“à•”‚Ådict‚ðXV‚µ‘±‚¯‚éˆÊ’u„’èƒ‹[ƒ`ƒ“‚ð“®‚©‚·
-            var opts = null;
+            var opts = {debug: false};
             if (SCENE.stereo) {
-                opts = {stereo: true};
+                opts = {stereo: true, debug: false};
             }
             POSITEST.runPositestKalman(map, dict, opts);
             var rotx = 0.0;
