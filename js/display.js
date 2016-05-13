@@ -18,11 +18,11 @@ define(['scene', 'engine/utils'], function (SCENE, UTILS) {
     //SCENE.scene.element.addEventListener('click', SCENE.scene.fullscreen.bind(SCENE.scene), false);
 
     SCENE.connect();
-    SCENE.test();
+    //SCENE.test();
     SCENE.start(false);
 
 
-    SCENE.scene.set_update_callback(function(dt) {
-        SCENE.scene.camera.position.set(600*Math.cos(this.clock.elapsedTime/4.0), 600*Math.sin(this.clock.elapsedTime/4.0), SCENE.scene.camera.position.z);
+    SCENE.scene.add_update_callback(function(dt) {
+        SCENE.scene.camera.position.set(600*Math.cos(SCENE.scene.clock.elapsedTime/4.0), 600*Math.sin(SCENE.scene.clock.elapsedTime/4.0), SCENE.scene.camera.position.z);
     });
 });

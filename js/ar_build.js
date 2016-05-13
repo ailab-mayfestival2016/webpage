@@ -1,6 +1,6 @@
 {
-    name: 'main',
-    out: 'build/main.js',
+    name: 'ar',
+    out: 'build/ar.js',
     paths: {
         three: 'three.js/build/three',
         DeviceOrientationControls: 'third-party/threejs/DeviceOrientationControls',
