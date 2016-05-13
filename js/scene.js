@@ -118,6 +118,13 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
             // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
             SCENE.audio_complete = buffer;
         });
+        SCENE.audio_playing = null;
+        getAudioBuffer('./sound/playing.mp3', function (buffer) {
+            SCENE.audio_playing = buffer;
+        })
+
+        SCENE.playingBGM = 'none';
+        SCENE.playingBGMBuffer = null;
 
         SCENE.phenox_mesh = null;
         (function () {
@@ -172,7 +179,24 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         source.connect(SCENE.context.destination);
         // Ä¶
         source.start(0);
+
+        return source
     };
+
+    var playBGM = function(buffer,id){
+        if(SCENE.playingBGM!='none'){
+            SCENE.playingBGMBuffer.stop();
+        }
+        SCENE.playingBGMBuffer = playSound(buffer);
+        SCENE.playingBGM = id;
+    }
+    var stopBGM = function(){
+        if(SCENE.playingBGM!='none'){
+            SCENE.playingBGMBuffer.stop();
+        }
+        SCENE.playingBGM = 'none';
+        SCENE.playingBGMBuffer = null;
+    }
     //‰¹º“Ç‚Ýž‚Ý
 
     //ƒCƒxƒ“ƒgƒnƒ“ƒhƒ‰
@@ -216,6 +240,8 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
             console.log("hide")
             $(".background_div").hide();
             $(".background_div").removeClass("fade");
+            //start BGM
+            playBGM(SCENE.audio_playing, 'playing');
         }, 2000);
     }
     function event_reflect(data) {
@@ -230,6 +256,7 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
     }
     function event_complete(data) {
         console.log("complete")
+        stopBGM();
         playSound(SCENE.audio_complete);
     }
     function event_gameover(data) {
