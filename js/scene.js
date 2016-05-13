@@ -122,6 +122,10 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
             getAudioBuffer('./sound/playing.mp3', function (buffer) {
                 SCENE.audio_playing = buffer;
             })
+            SCENE.audio_intro = null;
+            getAudioBuffer('./sound/intro.mp3', function (buffer) {
+                SCENE.audio_intro = buffer;
+            })
             SCENE.playingBGM = 'none';
             SCENE.playingBGMBuffer = null;
         }
@@ -198,7 +202,6 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         }
         SCENE.playingBGMBuffer = null;
     }
-
     //‰¹º“Ç‚Ýž‚Ý
 
     //ƒCƒxƒ“ƒgƒnƒ“ƒhƒ‰
@@ -232,6 +235,7 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         $(".background_div").show();
         SCENE.dict["run"] = false;
         SCENE.scene.stop_draw = true;
+        setTimeout(function() {playBGM(SCENE.audio_intro);}, 2000);
         $(SCENE.scene.element).hide();
     }
     function event_game_start(data) {
