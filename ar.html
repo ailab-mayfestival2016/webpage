@@ -17,7 +17,7 @@
     <!-- Bootstrap Core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/startscreen.css" rel="stylesheet">
-    <script data-main="js/common.js" src="js/require.js"></script>
+    <script src="js/require.js"></script>
 
     <!-- Custom CSS -->
     <style>
@@ -140,6 +140,12 @@
     <!-- Bootstrap Core JavaScript -->
     <script src="js/bootstrap.min.js"></script>
     <script>
+            requirejs.config({
+                //By default load any module IDs from js/lib
+                waitSeconds: 0,
+                baseUrl: 'js/build',
+            });
+
             requirejs(['ar'], function () {
             });
     </script>
