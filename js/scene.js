@@ -89,7 +89,6 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         SCENE.bar_mesh = bar_mesh;
         SCENE.bar_pos = [0.0, 200.0, 0.0, 60.0]
 
-
         if (SCENE.opts && SCENE.opts.sound_enabled) {
             window.AudioContext = window.AudioContext || window.webkitAudioContext;
             SCENE.context = new AudioContext();
@@ -125,6 +124,18 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
             SCENE.audio_intro = null;
             getAudioBuffer('./sound/intro.mp3', function (buffer) {
                 SCENE.audio_intro = buffer;
+            })
+            SCENE.audio_complete2 = null;
+            getAudioBuffer('./sound/complete2.mp3', function (buffer) {
+                SCENE.audio_complete2 = buffer;
+            })
+            SCENE.audio_timeup = null;
+            getAudioBuffer('./sound/timeup.mp3', function (buffer) {
+                SCENE.audio_timeup = buffer;
+            })
+            SCENE.audio_gameover = null;
+            getAudioBuffer('./sound/gameover.mp3', function (buffer) {
+                SCENE.audio_gameover = buffer;
             })
             SCENE.playingBGM = 'none';
             SCENE.playingBGMBuffer = null;
@@ -266,14 +277,19 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         console.log("complete")
         stopBGM();
         playSound(SCENE.audio_complete);
+        setTimeout(function () {
+            playSound(SCENE.audio_complete2);
+        },500)
     }
     function event_gameover(data) {
         stopBGM();
         console.log("game over")
+        playSound(SCENE.audio_gameover);
     }
     function event_timeup(data) {
         stopBGM();
         console.log("time up")
+        playSound(SCENE.audio_timeup)
     }
     function event_map(data) {
         console.log("get map", data);
