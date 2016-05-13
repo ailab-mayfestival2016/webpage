@@ -693,10 +693,7 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
             //Še‘¬“x‚ÌŠÏ‘ª
             var H_motion = []
             for (var i = 0; i < 3; i++) {
-                var arr = new Array(11);
-                for (var j = 0; j < 11; j++) {
-                    arr[j] = 0;
-                }
+                var arr = new Array(11).fill(0);
                 H_motion.push(arr);
                 H_motion[i][8 + i] = 1.0;
             }
