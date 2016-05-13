@@ -1,5 +1,6 @@
 requirejs.config({
     baseUrl: 'js',
+    waitSeconds: 0,
     paths: {
         three: 'third-party/threejs/three',
         DeviceOrientationControls: 'third-party/threejs/DeviceOrientationControls',

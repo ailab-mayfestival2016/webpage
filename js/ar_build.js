@@ -2,7 +2,7 @@
     name: 'ar',
     out: 'build/ar.js',
     paths: {
-        three: 'three.js/build/three',
+        three: 'third-party/threejs/three',
         DeviceOrientationControls: 'third-party/threejs/DeviceOrientationControls',
         OrbitControls: 'third-party/threejs/OrbitControls',
         StereoEffect: 'third-party/threejs/StereoEffect',
