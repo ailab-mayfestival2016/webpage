@@ -232,6 +232,7 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         $(SCENE.scene.element).show();
     }
     function event_opening(data) {
+        console.log(opening);
         $(".background_div").show();
         SCENE.dict["run"] = false;
         SCENE.scene.stop_draw = true;
@@ -249,7 +250,6 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
             $(".background_div").hide();
             $(".background_div").removeClass("fade");
             //start BGM
-            playBGM(SCENE.audio_playing, 'playing');
         }, 2000);
     }
     function event_reflect(data) {
