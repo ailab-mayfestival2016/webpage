@@ -67,14 +67,20 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
     arcanoid_scene.prototype.init = function(texture_set) {
         this.precision = "highp";
         this.texture_set = texture_set;
-        if (!this.texture_set) {
-            this.texture_set = UTILS.LOWRES_TEXTURES;
-            this.precision = "mediump";
-        }
         console.log(texture_set)
         this.clock = new THREE.Clock();
         this.renderer = new THREE.WebGLRenderer({ alpha: true });
         this.renderer.setPixelRatio(window.devicePixelRatio ? window.devicePixelRatio : 1);
+        if (!this.texture_set) {
+            this.texture_set = UTILS.LOWRES_TEXTURES;
+            if (this.renderer.context.getShaderPrecisionFormat
+                (
+                    this.renderer.context.FRAGMENT_SHADER, 
+                    this.renderer.context.HIGH_FLOAT
+                ).precision == 0) {
+                this.precision = "mediump";
+            }
+        }
         //this.renderer.autoClear = false;
         console.log(window.devicePixelRatio);
         this.default_renderer = this.renderer;
