@@ -73,7 +73,7 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
         this.clock = new THREE.Clock();
         this.renderer = new THREE.WebGLRenderer({ alpha: true });
         this.renderer.setPixelRatio(window.devicePixelRatio ? window.devicePixelRatio : 1);
-        this.renderer.autoClear = false;
+        //this.renderer.autoClear = false;
         console.log(window.devicePixelRatio);
         this.default_renderer = this.renderer;
 
@@ -590,7 +590,7 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
 
     arcanoid_scene.prototype.render = function(dt) {
         if (this.default_renderer != this.effect) {
-            this.renderer.clear();
+            //this.renderer.clear();
         }
         this.default_renderer.render(this.scene, this.camera);
         if (this.render_callback) {
