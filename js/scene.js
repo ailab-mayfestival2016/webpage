@@ -89,54 +89,57 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         SCENE.bar_mesh = bar_mesh;
         SCENE.bar_pos = [0.0, 200.0, 0.0, 60.0]
 
-
-
-        window.AudioContext = window.AudioContext || window.webkitAudioContext;
-        SCENE.context = new AudioContext();
-        SCENE.audio_bound = null;
-        getAudioBuffer('./sound/bound.mp3', function (buffer) {
-            // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
-            SCENE.audio_bound = buffer;
-        });
-        SCENE.audio_hit = null;
-        getAudioBuffer('./sound/hit.mp3', function (buffer) {
-            // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
-            SCENE.audio_hit = buffer;
-        });
-        SCENE.audio_radio = null;
-        getAudioBuffer('./sound/radio-wave.mp3', function (buffer) {
-            // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
-            SCENE.audio_radio = buffer;
-        });
-        SCENE.audio_explosion = null;
-        getAudioBuffer('./sound/explosion.mp3', function (buffer) {
-            // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
-            SCENE.audio_explosion = buffer;
-        });
-        SCENE.audio_complete = null;
-        getAudioBuffer('./sound/complete.mp3', function (buffer) {
-            // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
-            SCENE.audio_complete = buffer;
-        });
-        SCENE.audio_complete2 = null;
-        getAudioBuffer('./sound/complete2.mp3', function (buffer) {
-            SCENE.audio_complete2 = buffer;
-        })
-        SCENE.audio_playing = null;
-        getAudioBuffer('./sound/playing.mp3', function (buffer) {
-            SCENE.audio_playing = buffer;
-        })
-        SCENE.audio_timeup = null;
-        getAudioBuffer('./sound/timeup.mp3', function (buffer) {
-            SCENE.audio_timeup = buffer;
-        })
-        SCENE.audio_gameover = null;
-        getAudioBuffer('./sound/gameover.mp3', function (buffer) {
-            SCENE.audio_gameover = buffer;
-        })
-
-        SCENE.playingBGM = 'none';
-        SCENE.playingBGMBuffer = null;
+        if (SCENE.opts && SCENE.opts.sound_enabled) {
+            window.AudioContext = window.AudioContext || window.webkitAudioContext;
+            SCENE.context = new AudioContext();
+            SCENE.audio_bound = null;
+            getAudioBuffer('./sound/bound.mp3', function (buffer) {
+                // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
+                SCENE.audio_bound = buffer;
+            });
+            SCENE.audio_hit = null;
+            getAudioBuffer('./sound/hit.mp3', function (buffer) {
+                // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
+                SCENE.audio_hit = buffer;
+            });
+            SCENE.audio_radio = null;
+            getAudioBuffer('./sound/radio-wave.mp3', function (buffer) {
+                // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
+                SCENE.audio_radio = buffer;
+            });
+            SCENE.audio_explosion = null;
+            getAudioBuffer('./sound/explosion.mp3', function (buffer) {
+                // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
+                SCENE.audio_explosion = buffer;
+            });
+            SCENE.audio_complete = null;
+            getAudioBuffer('./sound/complete.mp3', function (buffer) {
+                // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
+                SCENE.audio_complete = buffer;
+            });
+            SCENE.audio_playing = null;
+            getAudioBuffer('./sound/playing.mp3', function (buffer) {
+                SCENE.audio_playing = buffer;
+            })
+            SCENE.audio_intro = null;
+            getAudioBuffer('./sound/intro.mp3', function (buffer) {
+                SCENE.audio_intro = buffer;
+            })
+            SCENE.audio_complete2 = null;
+            getAudioBuffer('./sound/complete2.mp3', function (buffer) {
+                SCENE.audio_complete2 = buffer;
+            })
+            SCENE.audio_timeup = null;
+            getAudioBuffer('./sound/timeup.mp3', function (buffer) {
+                SCENE.audio_timeup = buffer;
+            })
+            SCENE.audio_gameover = null;
+            getAudioBuffer('./sound/gameover.mp3', function (buffer) {
+                SCENE.audio_gameover = buffer;
+            })
+            SCENE.playingBGM = 'none';
+            SCENE.playingBGMBuffer = null;
+        }
 
         SCENE.phenox_mesh = null;
         (function () {
@@ -182,31 +185,32 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
     };
 
     // ƒTƒEƒ“ƒh‚ðÄ¶
-    var playSound = function (buffer) {
+    var playSound = function (buffer, loop) {
         // source ‚ðì¬
-        var source = SCENE.context.createBufferSource();
+        source = SCENE.context.createBufferSource();
         // buffer ‚ðƒZƒbƒg
         source.buffer = buffer;
+        if (loop) {
+            source.loop = true;
+        }
         // context ‚É connect
         source.connect(SCENE.context.destination);
         // Ä¶
         source.start(0);
 
-        return source
+        return source;
     };
 
-    var playBGM = function(buffer,id){
-        if(SCENE.playingBGM!='none'){
+    var playBGM = function(buffer, id){
+        if(SCENE.playingBGMBuffer){
             SCENE.playingBGMBuffer.stop();
         }
-        SCENE.playingBGMBuffer = playSound(buffer);
-        SCENE.playingBGM = id;
+        SCENE.playingBGMBuffer = playSound(buffer, true);
     }
     var stopBGM = function(){
-        if(SCENE.playingBGM!='none'){
+        if(SCENE.playingBGMBuffer){
             SCENE.playingBGMBuffer.stop();
         }
-        SCENE.playingBGM = 'none';
         SCENE.playingBGMBuffer = null;
     }
     //‰¹º“Ç‚Ýž‚Ý
@@ -235,25 +239,28 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         $(".background_div").hide();
         $(".background_div").removeClass("fade");
         SCENE.scene.stop_draw = false;
+        stopBGM();
         $(SCENE.scene.element).show();
     }
     function event_opening(data) {
+        console.log(opening);
         $(".background_div").show();
         SCENE.dict["run"] = false;
         SCENE.scene.stop_draw = true;
+        setTimeout(function() {playBGM(SCENE.audio_intro);}, 2000);
         $(SCENE.scene.element).hide();
     }
     function event_game_start(data) {
         SCENE.dict["run"] = true;
         SCENE.scene.stop_draw = false;
         $(".background_div").addClass("fade");
+        playBGM(SCENE.audio_playing);
         setTimeout(function() {
             $(SCENE.scene.element).show();
             console.log("hide")
             $(".background_div").hide();
             $(".background_div").removeClass("fade");
             //start BGM
-            playBGM(SCENE.audio_playing, 'playing');
         }, 2000);
     }
     function event_reflect(data) {
@@ -275,11 +282,13 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         },500)
     }
     function event_gameover(data) {
+        stopBGM();
         console.log("game over")
         playSound(SCENE.audio_gameover);
     }
     function event_timeup(data) {
-        console.log("time up");
+        stopBGM();
+        console.log("time up")
         playSound(SCENE.audio_timeup)
     }
     function event_map(data) {
