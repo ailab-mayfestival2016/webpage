@@ -54,11 +54,11 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         scene.add_update_callback(function(dt) {
             for (var i = 0; i < lines.length; i++) {
                 for (var j = 0; j < lines[i].geometry.vertices.length; j++) {
-                    lines[i].geometry.vertices[j].z = Math.sin((scene.clock.elapsedTime*100 + lines[i].geometry.vertices[j].x + lines[i].geometry.vertices[j].y)/100.0)*(Math.random()*40 - 20);
+                    lines[i].geometry.vertices[j].z = Math.sin(((i + scene.clock.elapsedTime)*10000 + lines[i].geometry.vertices[j].x + lines[i].geometry.vertices[j].y)/100.0)*(Math.random()*40 - 20);
                 }
                 lines[i].geometry.verticesNeedUpdate = true;
             }
-            console.log(10);
+            //console.log(10);
         });
 
         var geometry = new THREE.PlaneGeometry(200, 500, 10, 10);
@@ -310,12 +310,12 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
 
             //“à•”‚Ådict‚ðXV‚µ‘±‚¯‚éˆÊ’u„’èƒ‹[ƒ`ƒ“‚ð“®‚©‚·
             var map = [
-        { "id": 100, "pos": [-41.0, 464.0, 161.0], "mat": [[0.994, -0.05, -0.133], [0.05, 0.05, 0.995], [-0.043, -0.998, 0.052]], "size": 85.0 },
-        { "id": 50, "pos": [52.5, 460.0, 83.8], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 },
-        { "id": 90, "pos": [170.0, 278.5, 121.5], "mat": [[0.0, -1.0, 0.0], [0.0, 0.0, 1.0], [-1.0, 0.0, 0.0]], "size": 85.0 },
-        { "id": 10, "pos": [170.0, 118.5, 153.5], "mat": [[0.0, -1.0, 0.0], [0.0, 0.0, 1.0], [-1.0, 0.0, 0.0]], "size": 85.0 },
-        { "id": 150, "pos": [170.0, -24.0, 130.5], "mat": [[0.0, -1.0, 0.0], [0.0, 0.0, 1.0], [-1.0, 0.0, 0.0]], "size": 85.0 },
-        { "id": 70, "pos": [-68.5, 0.0, 0.0], "mat": [[0.0, 1.0, 0.0], [-1.0, 0.0, 0.0], [0.0, 0.0, 1.0]], "size": 57.0 }
+                { "id": 100, "pos": [-41.0, 464.0, 161.0], "mat": [[0.994, -0.05, -0.133], [0.05, 0.05, 0.995], [-0.043, -0.998, 0.052]], "size": 85.0 },
+                { "id": 50, "pos": [52.5, 460.0, 83.8], "mat": [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]], "size": 85.0 },
+                { "id": 90, "pos": [170.0, 278.5, 121.5], "mat": [[0.0, -1.0, 0.0], [0.0, 0.0, 1.0], [-1.0, 0.0, 0.0]], "size": 85.0 },
+                { "id": 10, "pos": [170.0, 118.5, 153.5], "mat": [[0.0, -1.0, 0.0], [0.0, 0.0, 1.0], [-1.0, 0.0, 0.0]], "size": 85.0 },
+                { "id": 150, "pos": [170.0, -24.0, 130.5], "mat": [[0.0, -1.0, 0.0], [0.0, 0.0, 1.0], [-1.0, 0.0, 0.0]], "size": 85.0 },
+                { "id": 70, "pos": [-68.5, 0.0, 0.0], "mat": [[0.0, 1.0, 0.0], [-1.0, 0.0, 0.0], [0.0, 0.0, 1.0]], "size": 57.0 }
             ]
 
             //“à•”‚Ådict‚ðXV‚µ‘±‚¯‚éˆÊ’u„’èƒ‹[ƒ`ƒ“‚ð“®‚©‚·
