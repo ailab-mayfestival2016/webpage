@@ -1,4 +1,4 @@
-define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/examples/js/libs/stats.min', 'numeric', 'posit_est'], function (io,block_class, arcanoid_scene, UTILS,a1,a2,a3,POSITEST) {
+define(['io','engine/block', 'engine/scene', 'engine/utils', 'posit_est', 'three', 'numeric'], function (io,block_class, arcanoid_scene, UTILS,POSITEST) {
     //‰¹º
     var SCENE = {dict: {}};
     SCENE.init = function(environment, stereo, opts) {
@@ -9,7 +9,7 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         }
         var scene = new arcanoid_scene(texture_set);
 
-        var fence = [[95, 0, 0], [95, 400, 0], [-140, 400, 0], [-140, 0, 0]];
+        var fence = [[95, 0, 0], [95, 370, 0], [-140, 370, 0], [-140, 0, 0]];
 
         //scene.init_controls();
         if (stereo) {
@@ -63,13 +63,13 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
                 //console.log(10);
             });
 
-            var geometry = new THREE.PlaneGeometry(200, 500, 10, 10);
+            var geometry = new THREE.PlaneGeometry(200, 370, 10, 10);
             var material = new THREE.MeshBasicMaterial({
                 wireframe: true,
                 color: 0xffffff
             })
             groundPlane = new THREE.Mesh(geometry, material);
-            groundPlane.position.y = 250
+            groundPlane.position.y = 185;
             if (!opts || !opts.hide_debug) {
                 scene.scene.add(groundPlane);
             }
@@ -87,7 +87,7 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         bar_mesh.position.z = 0.0;
         scene.scene.add(bar_mesh);
         SCENE.bar_mesh = bar_mesh;
-        SCENE.bar_pos = [0.0, 200.0, 0.0, 60.0]
+        SCENE.bar_pos = [0.0, 185.0, 0.0, 60.0]
 
         if (SCENE.opts && SCENE.opts.sound_enabled) {
             window.AudioContext = window.AudioContext || window.webkitAudioContext;
