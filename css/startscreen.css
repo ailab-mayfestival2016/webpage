@@ -24,9 +24,9 @@ p#start
 {
 	position: relative;
 	width: 16em;
-	font-size: 100%;
+	font-size: 200%;
 	font-weight: 400;
-	margin: 20% auto;
+	margin: 30% auto;
 	color: #ff6;
 	opacity: 0;
 	z-index: 1;
@@ -35,6 +35,11 @@ p#start
 	-ms-animation: intro 2s ease-out;
 	-o-animation: intro 2s ease-out;
 	animation: intro 2s ease-out;
+}
+@media screen and (max-device-width: 1000px) {
+p#start {
+	font-size: 200%;
+}
 }
 
 .fade

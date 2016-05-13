@@ -3,7 +3,13 @@
 
 define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js-aruco/svd', 'js-aruco/posit1-patched', 'js-aruco/cv', 'js-aruco/aruco', 'threex/webcamgrabbing', 'threex/imagegrabbing', 'threex/videograbbing', 'threex/jsarucomarker', 'numeric'], function (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12) {
     var POSITEST = {}
-
+    if (!Array.prototype.fill) {
+        Array.prototype.fill = function(x) {
+            for (var i = 0; i < this.length; i++) {
+                this[i] = x;
+            }
+        }
+    }
 
     function disposeNode(node) {
         if (node instanceof THREE.Camera) {
@@ -628,6 +634,17 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
         window.addEventListener('devicemotion', motionEventHandler);
 
         var timerID = setInterval(function () {
+            var debug_mode = opts && opts.debug;
+            if (!(debug_mode) && debug_mode) {
+                estimater.ifdebug = true;
+            } else {
+                estimater.ifdebug = false;
+            }
+
+            if (!(dict["run"])) {
+                return;
+            }
+
             var markers = estimater.observeMarkers(domElement);
 
             var H = [];//ŠÏ‘ªs—ñ
@@ -676,7 +693,8 @@ define(['three', 'three.js/examples/js/libs/stats.min', 'TrackballControls', 'js
             //Še‘¬“x‚ÌŠÏ‘ª
             var H_motion = []
             for (var i = 0; i < 3; i++) {
-                H_motion.push(new Array(11).fill(0.0));
+                var arr = new Array(11).fill(0);
+                H_motion.push(arr);
                 H_motion[i][8 + i] = 1.0;
             }
             H = H.concat(H_motion);

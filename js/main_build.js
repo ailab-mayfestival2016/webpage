@@ -1,8 +1,8 @@
 {
-    name: 'ar',
-    out: 'build/ar.js',
+    name: 'main',
+    out: 'build/main.js',
     paths: {
-        three: 'third-party/threejs/three',
+        three: 'three.js/build/three',
         DeviceOrientationControls: 'third-party/threejs/DeviceOrientationControls',
         OrbitControls: 'third-party/threejs/OrbitControls',
         StereoEffect: 'third-party/threejs/StereoEffect',

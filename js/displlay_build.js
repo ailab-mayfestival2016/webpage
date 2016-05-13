@@ -1,6 +1,6 @@
 {
-    name: 'ar',
-    out: 'build/ar.js',
+    name: 'display',
+    out: 'build/display.js',
     paths: {
         three: 'third-party/threejs/three',
         DeviceOrientationControls: 'third-party/threejs/DeviceOrientationControls',
