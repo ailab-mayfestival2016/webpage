@@ -23,6 +23,6 @@ define(['scene', 'engine/utils'], function (SCENE, UTILS) {
 
 
     SCENE.scene.add_update_callback(function(dt) {
-        SCENE.scene.camera.position.set(600*Math.cos(SCENE.scene.clock.elapsedTime/4.0), 600*Math.sin(SCENE.scene.clock.elapsedTime/4.0), SCENE.scene.camera.position.z);
+        SCENE.scene.camera.position.set(UTILS.CENTER[0] + 300*Math.cos(SCENE.scene.clock.elapsedTime/4.0), UTILS.CENTER[1] + 300*Math.sin(SCENE.scene.clock.elapsedTime/4.0), SCENE.scene.camera.position.z);
     });
 });
