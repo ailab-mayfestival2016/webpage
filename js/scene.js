@@ -54,11 +54,11 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         scene.add_update_callback(function(dt) {
             for (var i = 0; i < lines.length; i++) {
                 for (var j = 0; j < lines[i].geometry.vertices.length; j++) {
-                    lines[i].geometry.vertices[j].z = Math.sin((scene.clock.elapsedTime*100 + lines[i].geometry.vertices[j].x + lines[i].geometry.vertices[j].y)/100.0)*(Math.random()*40 - 20);
+                    lines[i].geometry.vertices[j].z = Math.sin(((i + scene.clock.elapsedTime)*10000 + lines[i].geometry.vertices[j].x + lines[i].geometry.vertices[j].y)/100.0)*(Math.random()*40 - 20);
                 }
                 lines[i].geometry.verticesNeedUpdate = true;
             }
-            console.log(10);
+            //console.log(10);
         });
 
         var geometry = new THREE.PlaneGeometry(200, 500, 10, 10);
