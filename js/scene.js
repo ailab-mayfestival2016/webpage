@@ -118,9 +118,21 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
             // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
             SCENE.audio_complete = buffer;
         });
+        SCENE.audio_complete2 = null;
+        getAudioBuffer('./sound/complete2.mp3', function (buffer) {
+            SCENE.audio_complete2 = buffer;
+        })
         SCENE.audio_playing = null;
         getAudioBuffer('./sound/playing.mp3', function (buffer) {
             SCENE.audio_playing = buffer;
+        })
+        SCENE.audio_timeup = null;
+        getAudioBuffer('./sound/timeup.mp3', function (buffer) {
+            SCENE.audio_timeup = buffer;
+        })
+        SCENE.audio_gameover = null;
+        getAudioBuffer('./sound/gameover.mp3', function (buffer) {
+            SCENE.audio_gameover = buffer;
         })
 
         SCENE.playingBGM = 'none';
@@ -258,12 +270,17 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         console.log("complete")
         stopBGM();
         playSound(SCENE.audio_complete);
+        setTimeout(function () {
+            playSound(SCENE.audio_complete2);
+        },500)
     }
     function event_gameover(data) {
         console.log("game over")
+        playSound(SCENE.audio_gameover);
     }
     function event_timeup(data) {
-        console.log("time up")
+        console.log("time up");
+        playSound(SCENE.audio_timeup)
     }
     function event_map(data) {
         console.log("get map", data);
