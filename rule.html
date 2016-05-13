@@ -1,57 +1,25 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
-    <meta name="apple-mobile-web-app-capable" content="yes"/>
-    <meta name="mobile-web-app-capable" content="yes"/>
-    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 
-    <title>3Dブロック崩し AR</title>
+    <title>3D Breakout</title>
 
     <!-- Bootstrap Core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/startscreen.css" rel="stylesheet">
-    <script data-main="js/common.js" src="js/require.js"></script>
 
     <!-- Custom CSS -->
     <style>
-        body {
-            padding-top: 70px;
-            /* Required padding for .navbar-fixed-top. Remove if using .navbar-static-top. Change if height of navigation changes. */
-            margin: 0px;
-            overflow: hidden;
-        }
-        #example {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            padding: 0;
-            margin: 0;
-            width: 100%;
-        }
-        video {
-          object-fit: cover;
-          overflow: hidden;
-        }
-        #center {
-            position: absolute;
-            left: 0px;
-            top: 0px;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            text-align: center;
-            z-index: -1;
-        }
-
+    body {
+        padding-top: 70px;
+        /* Required padding for .navbar-fixed-top. Remove if using .navbar-static-top. Change if height of navigation changes. */
+    }
     </style>
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -104,32 +72,25 @@
     </nav>
 
     <!-- Page Content -->
-    <div id="example" class="container">
-        <div id="center">
-            <div class="background_div">
-                    <p id="start">あなたの個人情報が奪われた…</p>
-                <h1>3DBREAKOUT<sub>理不尽と戦え！</sub></h1>
-                <div id="titles"><div id="titlecontent">
+    <div class="container">
 
+        <div class="row">
+            <div class="col-lg-12 text-center">
+            　　<img src="./images/logo.jpeg">
+                <h3>堀矢入研究室五月祭企画</h3>
+                <h1>3D Breakout</h1>     
                 <p class="center">EPISODE I<br>個人情報の反略</p>
 
                 <p>東大のサーバー内に正体不明のウィルスが侵入！</p><br>
                 <p>このままウイルスを野放しにしておくと東大の大事な研究データが破壊されてしまう！</p><br>
                 <p>そこで我々の研究室はウィルスを倒すために、クアドコプターPhenoxを特別にカスタマイズした。</p><br>
                 <p>君にはこのPhenoxと力を合わせてウィルスをどうか倒してほしい！</p><br>
-
-                </div>
-                </div>
-                <div class="instructions-set">
-                    <div class="instructions instructionsidle"> </div>
-                    <div class="instructions instructionsleft"> </div>
-                    <div class="instructions instructionsright"> </div>
-                    <p>
-                        WIIFITの上に立って重心を左右に動かすことでバーを動かせます。
-                    </p>
-                </div>
+                <h3>ルール</h3>
+                <p>WIIFITの上に立って重心を左右に動かすことでバーを動かせます。</p>
+                <p>Phenoxをバーで反射させて、ブロックを崩しましょう。</p>
             </div>
         </div>
+        <!-- /.row -->
 
     </div>
     <!-- /.container -->
@@ -139,11 +100,6 @@
 
     <!-- Bootstrap Core JavaScript -->
     <script src="js/bootstrap.min.js"></script>
-    <script>
-            requirejs(['ar'], function () {
-            });
-    </script>
-
 
 </body>
 
