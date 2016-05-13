@@ -118,6 +118,12 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
                 // “Ç‚Ýž‚ÝŠ®—¹Œã‚Éƒ{ƒ^ƒ“‚ÉƒNƒŠƒbƒNƒCƒxƒ“ƒg‚ð“o˜^
                 SCENE.audio_complete = buffer;
             });
+            SCENE.audio_playing = null;
+            getAudioBuffer('./sound/playing.mp3', function (buffer) {
+                SCENE.audio_playing = buffer;
+            })
+            SCENE.playingBGM = 'none';
+            SCENE.playingBGMBuffer = null;
         }
 
         SCENE.phenox_mesh = null;
@@ -176,13 +182,23 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         source.connect(SCENE.context.destination);
         // Ä¶
         source.start(0);
+
+        return source;
     };
-    var stopSound = function() {
-        if (SCENE.current_source) {
-            SCENE.current_source.stop();
-            SCENE.current_source = null;
+
+    var playBGM = function(buffer, id){
+        if(SCENE.playingBGMBuffer){
+            SCENE.playingBGMBuffer.stop();
         }
+        SCENE.playingBGMBuffer = playSound(buffer, true);
     }
+    var stopBGM = function(){
+        if(SCENE.playingBGMBuffer){
+            SCENE.playingBGMBuffer.stop();
+        }
+        SCENE.playingBGMBuffer = null;
+    }
+
     //‰¹º“Ç‚Ýž‚Ý
 
     //ƒCƒxƒ“ƒgƒnƒ“ƒhƒ‰
@@ -209,6 +225,7 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         $(".background_div").hide();
         $(".background_div").removeClass("fade");
         SCENE.scene.stop_draw = false;
+        stopBGM();
         $(SCENE.scene.element).show();
     }
     function event_opening(data) {
@@ -221,11 +238,14 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         SCENE.dict["run"] = true;
         SCENE.scene.stop_draw = false;
         $(".background_div").addClass("fade");
+        playBGM(SCENE.audio_playing);
         setTimeout(function() {
             $(SCENE.scene.element).show();
             console.log("hide")
             $(".background_div").hide();
             $(".background_div").removeClass("fade");
+            //start BGM
+            playBGM(SCENE.audio_playing, 'playing');
         }, 2000);
     }
     function event_reflect(data) {
@@ -240,12 +260,15 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
     }
     function event_complete(data) {
         console.log("complete")
+        stopBGM();
         playSound(SCENE.audio_complete);
     }
     function event_gameover(data) {
+        stopBGM();
         console.log("game over")
     }
     function event_timeup(data) {
+        stopBGM();
         console.log("time up")
     }
     function event_map(data) {
