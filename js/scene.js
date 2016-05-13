@@ -1,6 +1,6 @@
 define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/examples/js/libs/stats.min', 'numeric', 'posit_est'], function (io,block_class, arcanoid_scene, UTILS,a1,a2,a3,POSITEST) {
     //‰¹º
-    var SCENE = {};
+    var SCENE = {dict: {}};
     SCENE.init = function(environment, stereo, opts) {
         var texture_set = null;
         if (opts && opts.hires) {
@@ -72,7 +72,7 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
             scene.scene.add(groundPlane);
         }
 
-        var geometry = new THREE.BoxGeometry(60, 1000, 10);
+        var geometry = new THREE.BoxGeometry(60, 400, 10);
         var material = new THREE.MeshBasicMaterial({
             color: 0xff0000,
             transparent: true,
@@ -81,10 +81,10 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
         bar_mesh = new THREE.Mesh(geometry, material);
         bar_mesh.position.x = 0.0;
         bar_mesh.position.y = 40.0;
-        bar_mesh.position.z = 100.0;
+        bar_mesh.position.z = 0.0;
         scene.scene.add(bar_mesh);
         SCENE.bar_mesh = bar_mesh;
-        SCENE.bar_pos = [0.0, 100.0, 0.0]
+        SCENE.bar_pos = [0.0, 200.0, 0.0, 60.0]
 
 
 
@@ -184,15 +184,25 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
     function event_bar_position(data) {
         console.log("bar ->", data);
         SCENE.bar_pos[0] = data;
+        if (data.length) {
+            SCENE.bar_pos[0] = data[0];
+            SCENE.bar_pos[3] = data[1];
+
+        }
     }
 
     function event_abort(data) {
         //$(".background_div").show();
+        $(".background_div").hide();
+        $(".background_div").removeClass("fade");
+
     }
     function event_opening(data) {
         $(".background_div").show();
+        SCENE.dict["run"] = false;
     }
     function event_game_start(data) {
+        SCENE.dict["run"] = true;
         $(".background_div").addClass("fade");
         setTimeout(function() {
             console.log("hide")
@@ -306,7 +316,8 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
             //ƒJƒƒ‰‚ÌÀ•W‚È‚Ç‚ð•ÛŽ‚µ‚Ä‚¨‚­êŠ
             var pos = [0.0, 0.0, 5.0];
             var rotation = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
-            var dict = { "x": pos, "R": rotation, "f": 1.0, "video": null };
+            var dict = { "x": pos, "R": rotation, "f": 1.0, "video": null , run: true};
+            SCENE.dict = dict;
 
             //“à•”‚Ådict‚ðXV‚µ‘±‚¯‚éˆÊ’u„’èƒ‹[ƒ`ƒ“‚ð“®‚©‚·
             var map = [
@@ -334,8 +345,11 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
             SCENE.phenox_mesh.position.z = SCENE.phenox_pos[2];
 
             SCENE.bar_mesh.position.x = SCENE.bar_pos[0];
-            SCENE.bar_mesh.position.y = SCENE.bar_pos[1] - 135;
-            SCENE.bar_mesh.position.z = SCENE.bar_pos[2];
+            SCENE.bar_mesh.position.y = SCENE.bar_pos[1];
+            if (SCENE.bar_pos.length > 3) {
+
+                SCENE.bar_mesh.scale.x = SCENE.bar_pos[3]/60.0;
+            }
 
             if (ar) {
 
