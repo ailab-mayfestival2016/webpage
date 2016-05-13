@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/examples/js/libs/stats.min', 'numeric', 'posit_est'], function (io,block_class, arcanoid_scene, UTILS,a1,a2,a3,POSITEST) {
     //‰¹º
     var scene = new arcanoid_scene();
@@ -278,4 +279,11 @@ define(['io','engine/block', 'engine/scene', 'engine/utils', 'three', 'three.js/
     }
 
     setInterval(render, 20);
+=======
+define(['scene'], function (SCENE) {
+    SCENE.init("ar", true);
+    SCENE.connect();
+    SCENE.test();
+    SCENE.start(true);
+>>>>>>> upstream/master
 });

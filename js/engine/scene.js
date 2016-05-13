@@ -361,6 +361,19 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
             block.move(map[i].x, map[i].y);
             block.alive = true;
         }
+        for (var i in this.blocks) {
+            if (!this.blocks[i].alive) {
+                disposeHierarchy(this.blocks[i].block_mesh, function (child) {
+                    child.parent.remove(child);
+                })
+                disposeHierarchy(this.blocks[i].circuit_mesh, function (child) {
+                    child.parent.remove(child);
+                })
+                this.block_holder.remove(this.blocks[i].block_mesh);
+                this.block_holder.remove(this.blocks[i].circuit_mesh);
+                delete this.blocks[i];
+            }
+        }
         this.update_blocks();
         this.update_circuits();
         return this.blocks;
@@ -534,14 +547,16 @@ define(['engine/utils', 'engine/block', 'three', 'OrbitControls', 'StereoEffect'
             this.dead_blocks.push(block);
             delete this.blocks[i];
             setTimeout(function() {
-                disposeHierarchy(this.dead_blocks[index].block_mesh, function (child) {
-                    child.parent.remove(child);
-                })
-                disposeHierarchy(this.dead_blocks[index].circuit_mesh, function (child) {
-                    child.parent.remove(child);
-                })
-                this.block_holder.remove(this.dead_blocks[index].block_mesh);
-                this.block_holder.remove(this.dead_blocks[index].circuit_mesh);
+                if (this.dead_blocks[index]) {
+                    disposeHierarchy(this.dead_blocks[index].block_mesh, function (child) {
+                        child.parent.remove(child);
+                    })
+                    disposeHierarchy(this.dead_blocks[index].circuit_mesh, function (child) {
+                        child.parent.remove(child);
+                    })
+                    this.block_holder.remove(this.dead_blocks[index].block_mesh);
+                    this.block_holder.remove(this.dead_blocks[index].circuit_mesh);
+                }
 
                 //disposeNode(this.dead_blocks[index].block_mesh);
                 //disposeNode(this.dead_blocks[index].circuit_mesh);
